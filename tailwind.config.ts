@@ -47,6 +47,22 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        status: {
+          eligible: "hsl(var(--status-eligible))",
+          "eligible-bg": "hsl(var(--status-eligible-bg))",
+          "eligible-foreground": "hsl(var(--status-eligible-foreground))",
+          ineligible: "hsl(var(--status-ineligible))",
+          "ineligible-bg": "hsl(var(--status-ineligible-bg))",
+          "ineligible-foreground": "hsl(var(--status-ineligible-foreground))",
+          conditional: "hsl(var(--status-conditional))",
+          "conditional-bg": "hsl(var(--status-conditional-bg))",
+          "conditional-foreground": "hsl(var(--status-conditional-foreground))",
+        },
+        surface: {
+          0: "hsl(var(--surface-0))",
+          1: "hsl(var(--surface-1))",
+          2: "hsl(var(--surface-2))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
