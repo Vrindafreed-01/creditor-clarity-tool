@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, Send, Search, ChevronDown } from "lucide-react";
+import { Download, Search, ChevronDown } from "lucide-react";
 
 const stageStyles: Record<string, string> = {
   Lead: "bg-secondary text-secondary-foreground",
@@ -21,6 +22,7 @@ interface ClientHeaderProps {
   stage: string;
   onCheckLenderMatch: () => void;
   onRequestDetails: () => void;
+  onRequestDocuments: () => void;
 }
 
 const ClientHeader = ({
@@ -29,6 +31,7 @@ const ClientHeader = ({
   stage,
   onCheckLenderMatch,
   onRequestDetails,
+  onRequestDocuments,
 }: ClientHeaderProps) => {
   return (
     <div className="sticky top-0 z-30 bg-card border-b px-6 py-4">
@@ -50,10 +53,6 @@ const ClientHeader = ({
             <Download className="h-3.5 w-3.5" />
             Download CSV
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={onRequestDetails}>
-            <Send className="h-3.5 w-3.5" />
-            Request Details
-          </Button>
           <Button size="sm" className="gap-1.5 text-xs" onClick={onCheckLenderMatch}>
             <Search className="h-3.5 w-3.5" />
             Check Lender Match
@@ -61,15 +60,17 @@ const ClientHeader = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1 text-xs">
-                Actions
+                Select Actions
                 <ChevronDown className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Edit Client</DropdownMenuItem>
-              <DropdownMenuItem>Assign Rep</DropdownMenuItem>
-              <DropdownMenuItem>Move Stage</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">Archive Client</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={onRequestDetails} className="text-sm font-medium cursor-pointer">
+                Request Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onRequestDocuments} className="text-sm font-medium cursor-pointer">
+                Request Documents
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

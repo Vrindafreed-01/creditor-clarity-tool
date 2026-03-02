@@ -2,12 +2,9 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface FOIRCalculatorProps {
-  totalEMI: number;
-}
-
-const FOIRCalculator = ({ totalEMI }: FOIRCalculatorProps) => {
+const FOIRCalculator = () => {
   const [netSalary, setNetSalary] = useState(85000);
+  const [totalEMI, setTotalEMI] = useState(29000);
   const [proposedEMI, setProposedEMI] = useState(15000);
 
   const calculations = useMemo(() => {
@@ -30,25 +27,15 @@ const FOIRCalculator = ({ totalEMI }: FOIRCalculatorProps) => {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label className="crm-field-label">Net Salary (₹)</Label>
-          <Input
-            type="number"
-            value={netSalary}
-            onChange={(e) => setNetSalary(Number(e.target.value))}
-            className="h-9 text-sm"
-          />
+          <Input type="number" value={netSalary} onChange={(e) => setNetSalary(Number(e.target.value))} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">Total EMI (₹)</Label>
-          <Input value={totalEMI.toLocaleString()} readOnly className="h-9 text-sm bg-muted" />
+          <Input type="number" value={totalEMI} onChange={(e) => setTotalEMI(Number(e.target.value))} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">Proposed EMI (₹)</Label>
-          <Input
-            type="number"
-            value={proposedEMI}
-            onChange={(e) => setProposedEMI(Number(e.target.value))}
-            className="h-9 text-sm"
-          />
+          <Input type="number" value={proposedEMI} onChange={(e) => setProposedEMI(Number(e.target.value))} className="h-9 text-sm" />
         </div>
       </div>
 

@@ -23,19 +23,19 @@ const dummyClients = [
   { id: "5", name: "Meena", phone: "2638476277", email: "meena.k@gmail.com" },
 ];
 
-interface RequestDetailsModalProps {
+interface RequestDocumentsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const RequestDetailsModal = ({ open, onOpenChange }: RequestDetailsModalProps) => {
+const RequestDocumentsModal = ({ open, onOpenChange }: RequestDocumentsModalProps) => {
   const [selectedClient, setSelectedClient] = useState("");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Request Details</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Request Documents</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 pt-2">
           <div className="space-y-2">
@@ -61,7 +61,6 @@ const RequestDetailsModal = ({ open, onOpenChange }: RequestDetailsModalProps) =
             </Select>
           </div>
 
-          {/* Client list display */}
           <div className="border rounded-lg divide-y max-h-[300px] overflow-y-auto">
             {dummyClients.map((client) => (
               <div
@@ -97,4 +96,4 @@ const RequestDetailsModal = ({ open, onOpenChange }: RequestDetailsModalProps) =
   );
 };
 
-export default RequestDetailsModal;
+export default RequestDocumentsModal;

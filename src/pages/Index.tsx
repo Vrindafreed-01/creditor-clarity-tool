@@ -4,13 +4,16 @@ import ClientHeader from "@/components/crm/ClientHeader";
 import ProfileTab from "@/components/crm/ProfileTab";
 import CreditorTab from "@/components/crm/CreditorTab";
 import DocumentsTab from "@/components/crm/DocumentsTab";
+import CalculatorTab from "@/components/crm/CalculatorTab";
+import SummaryTab from "@/components/crm/SummaryTab";
 import RequestDetailsModal from "@/components/crm/RequestDetailsModal";
+import RequestDocumentsModal from "@/components/crm/RequestDocumentsModal";
 
 const Index = () => {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestDocsModalOpen, setRequestDocsModalOpen] = useState(false);
 
   const handleCheckLenderMatch = () => {
-    // Scroll to lender match table
     const el = document.getElementById("lender-match");
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
@@ -23,6 +26,7 @@ const Index = () => {
         stage="Qualified"
         onCheckLenderMatch={handleCheckLenderMatch}
         onRequestDetails={() => setRequestModalOpen(true)}
+        onRequestDocuments={() => setRequestDocsModalOpen(true)}
       />
 
       <div className="max-w-[1400px] mx-auto px-6 py-5">
@@ -37,6 +41,12 @@ const Index = () => {
             <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               DOCUMENTS
             </TabsTrigger>
+            <TabsTrigger value="summary" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              SUMMARY
+            </TabsTrigger>
+            <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              CALCULATOR
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -48,10 +58,17 @@ const Index = () => {
           <TabsContent value="documents">
             <DocumentsTab />
           </TabsContent>
+          <TabsContent value="summary">
+            <SummaryTab />
+          </TabsContent>
+          <TabsContent value="calculator">
+            <CalculatorTab />
+          </TabsContent>
         </Tabs>
       </div>
 
       <RequestDetailsModal open={requestModalOpen} onOpenChange={setRequestModalOpen} />
+      <RequestDocumentsModal open={requestDocsModalOpen} onOpenChange={setRequestDocsModalOpen} />
     </div>
   );
 };
