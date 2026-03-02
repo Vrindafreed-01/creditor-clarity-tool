@@ -17,19 +17,19 @@ interface PreQualificationCardProps {
 
 const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps) => {
   const [formData, setFormData] = useState({
-    netSalary: "85,000",
-    employmentType: "salaried",
-    companyName: "Infosys Ltd",
-    residingCity: "Bangalore",
-    ownedHouse: "rented",
-    totalExperience: "6",
-    designation: "Senior Software Engineer",
+    netSalary: "",
+    employmentType: "",
+    companyName: "",
+    currentDesignation: "",
+    totalExperience: "",
+    residingCity: "",
+    housingType: "",
   });
 
   return (
     <div className="bg-card rounded-lg border p-5">
-      <h3 className="text-sm font-semibold text-foreground mb-4">Pre-Qualification Details</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <h3 className="text-sm font-semibold text-foreground mb-4">Qualification Details</h3>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-1.5">
           <Label className="crm-field-label">Net Inhand Salary</Label>
           <Input
@@ -42,7 +42,7 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
           <Label className="crm-field-label">Employment Type</Label>
           <Select value={formData.employmentType} onValueChange={(v) => setFormData({ ...formData, employmentType: v })}>
             <SelectTrigger className="h-9 text-sm">
-              <SelectValue />
+              <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="salaried">Salaried</SelectItem>
@@ -60,32 +60,12 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Residing City</Label>
-          <Select value={formData.residingCity} onValueChange={(v) => setFormData({ ...formData, residingCity: v })}>
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Bangalore">Bangalore</SelectItem>
-              <SelectItem value="Mumbai">Mumbai</SelectItem>
-              <SelectItem value="Delhi">Delhi</SelectItem>
-              <SelectItem value="Hyderabad">Hyderabad</SelectItem>
-              <SelectItem value="Chennai">Chennai</SelectItem>
-              <SelectItem value="Pune">Pune</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="crm-field-label">Owned House</Label>
-          <Select value={formData.ownedHouse} onValueChange={(v) => setFormData({ ...formData, ownedHouse: v })}>
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="owned">Owned</SelectItem>
-              <SelectItem value="rented">Rented</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label className="crm-field-label">Current Designation</Label>
+          <Input
+            value={formData.currentDesignation}
+            onChange={(e) => setFormData({ ...formData, currentDesignation: e.target.value })}
+            className="h-9 text-sm"
+          />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">Total Work Experience</Label>
@@ -93,16 +73,27 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
             value={formData.totalExperience}
             onChange={(e) => setFormData({ ...formData, totalExperience: e.target.value })}
             className="h-9 text-sm"
-            placeholder="years"
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Current Designation</Label>
+          <Label className="crm-field-label">Residing City</Label>
           <Input
-            value={formData.designation}
-            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+            value={formData.residingCity}
+            onChange={(e) => setFormData({ ...formData, residingCity: e.target.value })}
             className="h-9 text-sm"
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="crm-field-label">Housing Type</Label>
+          <Select value={formData.housingType} onValueChange={(v) => setFormData({ ...formData, housingType: v })}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="owned">Owned</SelectItem>
+              <SelectItem value="rented">Rented</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <div className="mt-5 flex justify-end">
