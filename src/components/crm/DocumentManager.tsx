@@ -26,7 +26,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Pencil, MessageSquare, Archive } from "lucide-react";
+import { Upload, Pencil, MessageSquare, Archive, Check, X } from "lucide-react";
+
+const documentTypes = [
+  "Income Proof - Salary Slip",
+  "Income Proof - Bank Statement",
+  "Income Proof - Form 16",
+  "Income Proof - Balance Sheet for Deposit",
+  "Call Recordings",
+  "Credit Report",
+  "Others",
+];
 
 interface Document {
   id: string;
@@ -35,25 +45,48 @@ interface Document {
   dateRange: string;
   comment: string;
   usedForLogin: boolean;
-  userVisible: boolean;
   archived: boolean;
 }
 
 const initialDocs: Document[] = [
-  { id: "1", name: "Salary Slip - Jan 2024", type: "Salary Slip", dateRange: "Jan 2024", comment: "", usedForLogin: true, userVisible: true, archived: false },
-  { id: "2", name: "Salary Slip - Feb 2024", type: "Salary Slip", dateRange: "Feb 2024", comment: "", usedForLogin: true, userVisible: true, archived: false },
-  { id: "3", name: "Bank Statement - HDFC", type: "Bank Statement", dateRange: "Oct 2023 - Mar 2024", comment: "6 months statement", usedForLogin: true, userVisible: false, archived: false },
-  { id: "4", name: "PAN Card", type: "Identity Proof", dateRange: "", comment: "", usedForLogin: true, userVisible: true, archived: false },
-  { id: "5", name: "Aadhaar Card", type: "Identity Proof", dateRange: "", comment: "", usedForLogin: false, userVisible: true, archived: false },
-  { id: "6", name: "Form 16 - FY 2023-24", type: "Tax Document", dateRange: "FY 2023-24", comment: "", usedForLogin: false, userVisible: true, archived: false },
+  { id: "1", name: "Salary Slip - Jan 2024", type: "Income Proof - Salary Slip", dateRange: "Jan 2024", comment: "", usedForLogin: true, archived: false },
+  { id: "2", name: "Salary Slip - Feb 2024", type: "Income Proof - Salary Slip", dateRange: "Feb 2024", comment: "", usedForLogin: true, archived: false },
+  { id: "3", name: "Bank Statement - HDFC", type: "Income Proof - Bank Statement", dateRange: "Oct 2023 - Mar 2024", comment: "6 months statement", usedForLogin: true, archived: false },
+  { id: "4", name: "PAN Card", type: "Others", dateRange: "", comment: "", usedForLogin: true, archived: false },
+  { id: "5", name: "Aadhaar Card", type: "Others", dateRange: "", comment: "", usedForLogin: false, archived: false },
+  { id: "6", name: "Form 16 - FY 2023-24", type: "Income Proof - Form 16", dateRange: "FY 2023-24", comment: "", usedForLogin: false, archived: false },
 ];
 
 const DocumentManager = () => {
   const [docs, setDocs] = useState<Document[]>(initialDocs);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState("");
 
-  const toggleField = (id: string, field: "usedForLogin" | "userVisible" | "archived") => {
+  const toggleField = (id: string, field: "usedForLogin" | "archived") => {
     setDocs(docs.map((d) => (d.id === id ? { ...d, [field]: !d[field] } : d)));
+  };
+
+  const handleTypeChange = (id: string, newType: string) => {
+    setDocs(docs.map((d) => (d.id === id ? { ...d, type: newType } : d)));
+  };
+
+  const startRename = (doc: Document) => {
+    setEditingNameId(doc.id);
+    setEditingNameValue(doc.name);
+  };
+
+  const confirmRename = () => {
+    if (editingNameId) {
+      setDocs(docs.map((d) => (d.id === editingNameId ? { ...d, name: editingNameValue } : d)));
+      setEditingNameId(null);
+      setEditingNameValue("");
+    }
+  };
+
+  const cancelRename = () => {
+    setEditingNameId(null);
+    setEditingNameValue("");
   };
 
   return (
@@ -79,12 +112,9 @@ const DocumentManager = () => {
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="salary-slip">Salary Slip</SelectItem>
-                    <SelectItem value="bank-statement">Bank Statement</SelectItem>
-                    <SelectItem value="identity-proof">Identity Proof</SelectItem>
-                    <SelectItem value="address-proof">Address Proof</SelectItem>
-                    <SelectItem value="tax-document">Tax Document</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {documentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -117,26 +147,69 @@ const DocumentManager = () => {
             <TableHead className="text-xs">Date Range</TableHead>
             <TableHead className="text-xs">Comment</TableHead>
             <TableHead className="text-xs text-center">Used for Login</TableHead>
-            <TableHead className="text-xs text-center">User Visible</TableHead>
             <TableHead className="text-xs text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {docs.filter((d) => !d.archived).map((doc) => (
             <TableRow key={doc.id}>
-              <TableCell className="text-sm font-medium">{doc.name}</TableCell>
-              <TableCell className="text-sm text-muted-foreground">{doc.type}</TableCell>
+              <TableCell>
+                {editingNameId === doc.id ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={editingNameValue}
+                      onChange={(e) => setEditingNameValue(e.target.value)}
+                      className="h-7 text-sm w-48"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") confirmRename();
+                        if (e.key === "Escape") cancelRename();
+                      }}
+                    />
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-status-eligible-foreground" onClick={confirmRename}>
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground" onClick={cancelRename}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="text-sm font-medium">{doc.name}</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <Select value={doc.type} onValueChange={(v) => handleTypeChange(doc.id, v)}>
+                  <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 pl-1 focus:ring-0 w-auto min-w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map((type) => (
+                      <SelectItem key={type} value={type} className="text-sm">{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </TableCell>
               <TableCell className="text-sm text-muted-foreground">{doc.dateRange || "—"}</TableCell>
               <TableCell className="text-sm text-muted-foreground">{doc.comment || "—"}</TableCell>
               <TableCell className="text-center">
-                <Switch checked={doc.usedForLogin} onCheckedChange={() => toggleField(doc.id, "usedForLogin")} />
-              </TableCell>
-              <TableCell className="text-center">
-                <Switch checked={doc.userVisible} onCheckedChange={() => toggleField(doc.id, "userVisible")} />
+                <Select
+                  value={doc.usedForLogin ? "yes" : "no"}
+                  onValueChange={(v) => {
+                    setDocs(docs.map((d) => (d.id === doc.id ? { ...d, usedForLogin: v === "yes" } : d)));
+                  }}
+                >
+                  <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 pl-1 focus:ring-0 w-auto min-w-[60px] mx-auto">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
               </TableCell>
               <TableCell>
                 <div className="flex items-center justify-center gap-1">
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground" onClick={() => startRename(doc)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground">
