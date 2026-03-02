@@ -6,21 +6,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { User } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
-const dummyClients = [
-  { id: "1", name: "Sathva", phone: "0223456789", email: "sathvanaturals@gmail.com" },
-  { id: "2", name: "Arshad", phone: "0882826823", email: "Arshad_atul@yahoo.com" },
-  { id: "3", name: "Priya", phone: "1234555679", email: "priya.test@gmail.com" },
-  { id: "4", name: "Rakesh", phone: "1234567890", email: "rakeshbari110@gmail.com" },
-  { id: "5", name: "Meena", phone: "2638476277", email: "meena.k@gmail.com" },
+const requestableDetails = [
+  { id: "pan", label: "PAN Card Number" },
+  { id: "aadhaar", label: "Aadhaar Card Number" },
+  { id: "dob", label: "Date of Birth" },
+  { id: "father", label: "Father's Name" },
+  { id: "mother", label: "Mother's Name" },
+  { id: "marital", label: "Marital Status" },
+  { id: "address_current", label: "Current Residential Address" },
+  { id: "address_permanent", label: "Permanent Address" },
+  { id: "employer", label: "Employer Name & Address" },
+  { id: "designation", label: "Current Designation" },
+  { id: "work_exp", label: "Total Work Experience" },
+  { id: "salary", label: "Net In-Hand Salary" },
+  { id: "bank_acc", label: "Bank Account Details" },
+  { id: "ifsc", label: "Bank IFSC Code" },
+  { id: "ref1", label: "Reference Person 1 Details" },
+  { id: "ref2", label: "Reference Person 2 Details" },
+  { id: "existing_loans", label: "Existing Loan / EMI Details" },
+  { id: "credit_card", label: "Credit Card Outstanding" },
 ];
 
 interface RequestDetailsModalProps {
@@ -29,7 +35,17 @@ interface RequestDetailsModalProps {
 }
 
 const RequestDetailsModal = ({ open, onOpenChange }: RequestDetailsModalProps) => {
-  const [selectedClient, setSelectedClient] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const toggle = (id: string) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAll = () => {
+    setSelected(selected.length === requestableDetails.length ? [] : requestableDetails.map((d) => d.id));
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,54 +53,32 @@ const RequestDetailsModal = ({ open, onOpenChange }: RequestDetailsModalProps) =
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">Request Details</DialogTitle>
         </DialogHeader>
-        <div className="space-y-5 pt-2">
-          <div className="space-y-2">
-            <Select value={selectedClient} onValueChange={setSelectedClient}>
-              <SelectTrigger className="h-10 text-sm">
-                <SelectValue placeholder="Select Details" />
-              </SelectTrigger>
-              <SelectContent>
-                {dummyClients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    <div className="flex items-center gap-3 py-1">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{client.name}</p>
-                        <p className="text-xs text-muted-foreground">{client.phone}, {client.email}</p>
-                      </div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Select the details you want to request from the client</p>
+            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={toggleAll}>
+              {selected.length === requestableDetails.length ? "Deselect All" : "Select All"}
+            </Button>
           </div>
 
-          {/* Client list display */}
-          <div className="border rounded-lg divide-y max-h-[300px] overflow-y-auto">
-            {dummyClients.map((client) => (
+          <div className="border rounded-lg divide-y max-h-[350px] overflow-y-auto">
+            {requestableDetails.map((item) => (
               <div
-                key={client.id}
-                className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors ${selectedClient === client.id ? "bg-muted" : ""}`}
-                onClick={() => setSelectedClient(client.id)}
+                key={item.id}
+                className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => toggle(item.id)}
               >
-                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                  <User className="h-4.5 w-4.5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{client.name}</p>
-                  <p className="text-xs text-muted-foreground">{client.phone}, {client.email}</p>
-                </div>
+                <Checkbox checked={selected.includes(item.id)} />
+                <span className="text-sm text-foreground">{item.label}</span>
               </div>
             ))}
           </div>
 
           <div className="flex items-center justify-center gap-3 pt-2">
-            <Button size="sm" disabled={!selectedClient} onClick={() => onOpenChange(false)}>
-              Send Request
+            <Button size="sm" disabled={selected.length === 0} onClick={() => onOpenChange(false)}>
+              Send Request ({selected.length})
             </Button>
-            <Button variant="outline" size="sm" disabled={!selectedClient}>
+            <Button variant="outline" size="sm" disabled={selected.length === 0}>
               Update Request
             </Button>
             <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
