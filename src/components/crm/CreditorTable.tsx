@@ -31,20 +31,14 @@ const initialCreditors: Creditor[] = [
   { id: "4", name: "SBI", debtType: "Education Loan", sanctionedAmount: 800000, currentOutstanding: 600000, emi: 8000, tenure: 84, roi: 8.5, status: "Active" },
 ];
 
-interface CreditorTableProps {
-  onEMIChange: (totalEMI: number) => void;
-}
-
-const CreditorTable = ({ onEMIChange }: CreditorTableProps) => {
+const CreditorTable = () => {
   const [creditors, setCreditors] = useState<Creditor[]>(initialCreditors);
 
   const totalDebt = creditors.reduce((s, c) => s + c.currentOutstanding, 0);
   const totalEMI = creditors.reduce((s, c) => s + c.emi, 0);
 
   const handleDelete = (id: string) => {
-    const updated = creditors.filter((c) => c.id !== id);
-    setCreditors(updated);
-    onEMIChange(updated.reduce((s, c) => s + c.emi, 0));
+    setCreditors(creditors.filter((c) => c.id !== id));
   };
 
   const handleAdd = () => {
@@ -63,13 +57,9 @@ const CreditorTable = ({ onEMIChange }: CreditorTableProps) => {
   };
 
   const handleChange = (id: string, field: keyof Creditor, value: string | number) => {
-    const updated = creditors.map((c) =>
+    setCreditors(creditors.map((c) =>
       c.id === id ? { ...c, [field]: value } : c
-    );
-    setCreditors(updated);
-    if (field === "emi") {
-      onEMIChange(updated.reduce((s, c) => s + c.emi, 0));
-    }
+    ));
   };
 
   return (
@@ -115,58 +105,25 @@ const CreditorTable = ({ onEMIChange }: CreditorTableProps) => {
           {creditors.map((c) => (
             <TableRow key={c.id}>
               <TableCell>
-                <Input
-                  value={c.name}
-                  onChange={(e) => handleChange(c.id, "name", e.target.value)}
-                  className="h-7 text-sm border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:bg-muted rounded px-1"
-                />
+                <Input value={c.name} onChange={(e) => handleChange(c.id, "name", e.target.value)} className="h-7 text-sm border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:bg-muted rounded px-1" />
               </TableCell>
               <TableCell>
-                <Input
-                  value={c.debtType}
-                  onChange={(e) => handleChange(c.id, "debtType", e.target.value)}
-                  className="h-7 text-sm border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:bg-muted rounded px-1"
-                />
+                <Input value={c.debtType} onChange={(e) => handleChange(c.id, "debtType", e.target.value)} className="h-7 text-sm border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:bg-muted rounded px-1" />
               </TableCell>
               <TableCell className="text-right">
-                <Input
-                  type="number"
-                  value={c.sanctionedAmount}
-                  onChange={(e) => handleChange(c.id, "sanctionedAmount", Number(e.target.value))}
-                  className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1"
-                />
+                <Input type="number" value={c.sanctionedAmount} onChange={(e) => handleChange(c.id, "sanctionedAmount", Number(e.target.value))} className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1" />
               </TableCell>
               <TableCell className="text-right">
-                <Input
-                  type="number"
-                  value={c.currentOutstanding}
-                  onChange={(e) => handleChange(c.id, "currentOutstanding", Number(e.target.value))}
-                  className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1"
-                />
+                <Input type="number" value={c.currentOutstanding} onChange={(e) => handleChange(c.id, "currentOutstanding", Number(e.target.value))} className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1" />
               </TableCell>
               <TableCell className="text-right">
-                <Input
-                  type="number"
-                  value={c.emi}
-                  onChange={(e) => handleChange(c.id, "emi", Number(e.target.value))}
-                  className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1"
-                />
+                <Input type="number" value={c.emi} onChange={(e) => handleChange(c.id, "emi", Number(e.target.value))} className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1" />
               </TableCell>
               <TableCell className="text-right">
-                <Input
-                  type="number"
-                  value={c.tenure}
-                  onChange={(e) => handleChange(c.id, "tenure", Number(e.target.value))}
-                  className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1"
-                />
+                <Input type="number" value={c.tenure} onChange={(e) => handleChange(c.id, "tenure", Number(e.target.value))} className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1" />
               </TableCell>
               <TableCell className="text-right">
-                <Input
-                  type="number"
-                  value={c.roi}
-                  onChange={(e) => handleChange(c.id, "roi", Number(e.target.value))}
-                  className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1"
-                />
+                <Input type="number" value={c.roi} onChange={(e) => handleChange(c.id, "roi", Number(e.target.value))} className="h-7 text-sm border-0 bg-transparent p-0 text-right focus-visible:ring-0 focus-visible:bg-muted rounded px-1" />
               </TableCell>
               <TableCell>
                 <Badge variant="secondary" className="text-xs bg-status-eligible-bg text-status-eligible-foreground border-0">
