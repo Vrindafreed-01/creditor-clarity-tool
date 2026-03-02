@@ -93,7 +93,7 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
             value={formData.totalExperience}
             onChange={(e) => setFormData({ ...formData, totalExperience: e.target.value })}
             className="h-9 text-sm"
-            suffix="years"
+            placeholder="years"
           />
         </div>
         <div className="space-y-1.5">
