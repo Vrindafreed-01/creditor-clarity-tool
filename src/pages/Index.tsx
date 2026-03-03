@@ -5,7 +5,7 @@ import ProfileTab from "@/components/crm/ProfileTab";
 import CreditorTab from "@/components/crm/CreditorTab";
 import DocumentsTab from "@/components/crm/DocumentsTab";
 import CalculatorTab from "@/components/crm/CalculatorTab";
-import SummaryTab from "@/components/crm/SummaryTab";
+
 import RequestDetailsModal from "@/components/crm/RequestDetailsModal";
 import RequestDocumentsModal from "@/components/crm/RequestDocumentsModal";
 
@@ -41,9 +41,6 @@ const Index = () => {
             <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               DOCUMENTS
             </TabsTrigger>
-            <TabsTrigger value="summary" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              SUMMARY
-            </TabsTrigger>
             <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               CALCULATOR
             </TabsTrigger>
@@ -57,9 +54,6 @@ const Index = () => {
           </TabsContent>
           <TabsContent value="documents">
             <DocumentsTab />
-          </TabsContent>
-          <TabsContent value="summary">
-            <SummaryTab />
           </TabsContent>
           <TabsContent value="calculator">
             <CalculatorTab />
