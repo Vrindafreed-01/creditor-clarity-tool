@@ -95,6 +95,14 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
             </SelectContent>
           </Select>
         </div>
+        <div className="space-y-1.5">
+          <Label className="crm-field-label">Lender Fitment Check</Label>
+          <Input
+            value={formData.lenderFitmentCheck}
+            onChange={(e) => setFormData({ ...formData, lenderFitmentCheck: e.target.value })}
+            className="h-9 text-sm"
+          />
+        </div>
       </div>
       <div className="mt-5 flex justify-end">
         <Button size="sm" className="gap-1.5" onClick={onCheckLenderMatch}>
