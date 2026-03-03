@@ -55,9 +55,6 @@ const Index = () => {
           <TabsContent value="documents">
             <DocumentsTab />
           </TabsContent>
-          <TabsContent value="summary">
-            <SummaryTab />
-          </TabsContent>
           <TabsContent value="calculator">
             <CalculatorTab />
           </TabsContent>
