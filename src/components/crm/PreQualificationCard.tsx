@@ -96,7 +96,9 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
+      </div>
+      <div className="mt-4">
+        <div className="space-y-1.5 md:col-span-2">
           <Label className="crm-field-label">Lender Fitment Check</Label>
           <Input
             value={formData.lenderFitmentCheck}
