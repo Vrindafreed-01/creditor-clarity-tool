@@ -97,8 +97,8 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
           </Select>
         </div>
       </div>
-      <div className="mt-4">
-        <div className="space-y-1.5 md:col-span-2">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="space-y-1.5">
           <Label className="crm-field-label">Lender Fitment Check</Label>
           <div className="relative">
             <Input
