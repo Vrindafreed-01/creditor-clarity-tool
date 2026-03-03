@@ -5,7 +5,7 @@ import ProfileTab from "@/components/crm/ProfileTab";
 import CreditorTab from "@/components/crm/CreditorTab";
 import DocumentsTab from "@/components/crm/DocumentsTab";
 import CalculatorTab from "@/components/crm/CalculatorTab";
-import SummaryTab from "@/components/crm/SummaryTab";
+
 import RequestDetailsModal from "@/components/crm/RequestDetailsModal";
 import RequestDocumentsModal from "@/components/crm/RequestDocumentsModal";
 
