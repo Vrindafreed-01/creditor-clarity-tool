@@ -24,6 +24,7 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
     totalExperience: "",
     residingCity: "",
     housingType: "",
+    lenderFitmentCheck: "",
   });
 
   return (
