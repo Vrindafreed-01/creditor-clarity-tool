@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -8,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { RefreshCw, Check, X } from "lucide-react";
 
 type MatchStatus = "eligible" | "ineligible";
@@ -65,14 +67,54 @@ const typeBadgeStyles: Record<string, string> = {
   normal: "",
 };
 
+const PWALenderMatchContent = () => (
+  <div className="overflow-x-auto">
+    <Table>
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          <TableHead className="text-xs font-semibold w-[140px]">Parameters</TableHead>
+          <TableHead className="text-xs font-semibold text-center w-[100px]">Inputs</TableHead>
+          {lenders.map((l) => (
+            <TableHead key={l.name} className="text-center">
+              <div className="flex flex-col items-center gap-1">
+                {l.type !== "normal" && (
+                  <Badge className={`${typeBadgeStyles[l.type]} text-[10px] border-0 px-2 py-0.5`}>
+                    {l.type === "qualified" ? "Qualified lender" : "Preferred lender"}
+                  </Badge>
+                )}
+                <span className="text-xs font-semibold">{l.name}</span>
+              </div>
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {parameters.map((param) => (
+          <TableRow key={param.key}>
+            <TableCell className="text-sm font-medium">{param.label}</TableCell>
+            <TableCell className="text-sm text-center text-muted-foreground">{param.input}</TableCell>
+            {lenders.map((l) => (
+              <TableCell key={l.name} className="text-center">
+                <StatusIcon status={l.matches[param.key]} />
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </div>
+);
+
 const LenderMatchTable = () => {
+  const [pwaSheetOpen, setPwaSheetOpen] = useState(false);
+
   return (
     <div className="bg-card rounded-lg border" id="lender-match">
       <div className="flex items-center justify-between px-5 py-4">
         <h3 className="text-sm font-semibold text-foreground">Lender Match Details</h3>
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setPwaSheetOpen(true)}>
           <RefreshCw className="h-3.5 w-3.5" />
-          Check Match Using Client PWA Data
+          PWA Preferred Lender Match Data
         </Button>
       </div>
       <div className="overflow-x-auto">
@@ -110,6 +152,17 @@ const LenderMatchTable = () => {
           </TableBody>
         </Table>
       </div>
+
+      <Sheet open={pwaSheetOpen} onOpenChange={setPwaSheetOpen}>
+        <SheetContent side="right" className="w-[700px] sm:max-w-[700px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>PWA Preferred Lender Match Data</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
+            <PWALenderMatchContent />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
