@@ -100,11 +100,14 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
       <div className="mt-4">
         <div className="space-y-1.5 md:col-span-2">
           <Label className="crm-field-label">Lender Fitment Check</Label>
-          <Input
-            value={formData.lenderFitmentCheck}
-            onChange={(e) => setFormData({ ...formData, lenderFitmentCheck: e.target.value })}
-            className="h-9 text-sm"
-          />
+          <div className="relative">
+            <Input
+              value={formData.lenderFitmentCheck}
+              onChange={(e) => setFormData({ ...formData, lenderFitmentCheck: e.target.value })}
+              className="h-9 text-sm pr-9"
+            />
+            <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
       </div>
       <div className="mt-5 flex justify-end">
