@@ -41,9 +41,6 @@ const Index = () => {
             <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               DOCUMENTS
             </TabsTrigger>
-            <TabsTrigger value="summary" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              SUMMARY
-            </TabsTrigger>
             <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               CALCULATOR
             </TabsTrigger>
