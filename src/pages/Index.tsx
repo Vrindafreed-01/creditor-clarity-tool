@@ -31,20 +31,22 @@ const Index = () => {
 
       <div className="max-w-[1400px] mx-auto px-6 py-5">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="bg-card border h-10 p-1 mb-5">
-            <TabsTrigger value="profile" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              PROFILE
-            </TabsTrigger>
-            <TabsTrigger value="creditor" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              CREDITOR
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              DOCUMENTS
-            </TabsTrigger>
-            <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              CALCULATOR
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center mb-5">
+            <TabsList className="bg-card border h-10 p-1">
+              <TabsTrigger value="profile" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                PROFILE
+              </TabsTrigger>
+              <TabsTrigger value="creditor" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                CREDITOR
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                DOCUMENTS
+              </TabsTrigger>
+              <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                CALCULATOR
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="profile">
             <ProfileTab onCheckLenderMatch={handleCheckLenderMatch} />
