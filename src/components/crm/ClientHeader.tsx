@@ -71,6 +71,9 @@ const ClientHeader = ({
               <DropdownMenuItem onClick={onRequestDocuments} className="text-sm font-medium cursor-pointer">
                 Request Documents
               </DropdownMenuItem>
+              <DropdownMenuItem className="text-sm font-medium cursor-pointer">
+                Request Scrub
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
