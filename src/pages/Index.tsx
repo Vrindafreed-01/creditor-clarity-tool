@@ -21,9 +21,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <ClientHeader
-        clientName="Rahul Sharma"
-        clientId="CLT-2024-00847"
-        stage="Qualified"
+        clientName="Saurabh Deshpande"
+        clientId="KFSAPP-INH-0226-2362704"
+        stage="DCP_AGREEMENT_SIGNED"
+        phone="77210 69734"
+        channel="DCP"
         onCheckLenderMatch={handleCheckLenderMatch}
         onRequestDetails={() => setRequestModalOpen(true)}
         onRequestDocuments={() => setRequestDocsModalOpen(true)}
