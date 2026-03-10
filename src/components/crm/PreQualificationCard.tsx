@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 
 interface PreQualificationCardProps {
   onCheckLenderMatch: () => void;
