@@ -18,6 +18,8 @@ import RequestDocumentsModal from "./RequestDocumentsModal";
 
 const RightPanel = () => {
   const [noteText, setNoteText] = useState("");
+  const [requestDetailsOpen, setRequestDetailsOpen] = useState(false);
+  const [requestDocumentsOpen, setRequestDocumentsOpen] = useState(false);
 
   const notes = [
     "Call Nature : Manual-Outbound| Call start time: 2025-03-10 10:30",
