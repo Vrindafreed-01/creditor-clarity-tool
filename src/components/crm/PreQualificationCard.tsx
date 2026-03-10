@@ -19,12 +19,11 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
   const [totalOutstanding, setTotalOutstanding] = useState("");
   const [formData, setFormData] = useState({
     netSalary: "",
-    employmentType: "",
-    companyName: "",
-    totalExperience: "",
     residingCity: "",
     housingType: "",
-    companyResidingCity: "",
+    currentCity: "",
+    currentCityHousing: "",
+    companyName: "",
     lenderFitmentCheck: "",
   });
 
