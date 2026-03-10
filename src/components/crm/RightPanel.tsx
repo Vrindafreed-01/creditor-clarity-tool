@@ -185,6 +185,8 @@ const RightPanel = () => {
           </CardContent>
         </Card>
       </div>
+      <RequestDetailsModal open={requestDetailsOpen} onOpenChange={setRequestDetailsOpen} />
+      <RequestDocumentsModal open={requestDocumentsOpen} onOpenChange={setRequestDocumentsOpen} />
     </aside>
   );
 };
