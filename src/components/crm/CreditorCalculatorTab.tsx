@@ -66,7 +66,7 @@ const CreditorCalculatorTab = () => {
   const [tenure, setTenure] = useState("72");
   const [rateOfInterest, setRateOfInterest] = useState(16);
   const [existingTotalEMI, setExistingTotalEMI] = useState(69942);
-  const [calculated, setCalculated] = useState(false);
+  const [calculated, setCalculated] = useState(true);
 
   const income = 100000;
 
