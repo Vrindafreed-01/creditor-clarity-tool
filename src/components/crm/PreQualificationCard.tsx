@@ -42,7 +42,29 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
 
       {/* Qualification Details */}
       <div className="bg-card rounded-lg border p-5">
-        <h3 className="text-sm font-semibold text-foreground mb-4">Qualification Details</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-foreground">Qualification Details</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => {
+              const headers = ["Net Inhand Salary", "Residing City", "Housing Type", "Current City", "Current City Housing", "Company Name", "Lender Fitment Check"];
+              const values = [formData.netSalary, formData.residingCity, formData.housingType, formData.currentCity, formData.currentCityHousing, formData.companyName, formData.lenderFitmentCheck];
+              const csv = [headers.join(","), values.join(",")].join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "qualification_details.csv";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download CSV
+          </Button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <Label className="crm-field-label">Net Inhand Salary</Label>
