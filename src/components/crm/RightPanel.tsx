@@ -81,6 +81,9 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, on
               <Select onValueChange={(val) => {
                 if (val === "request-details") onRequestDetails();
                 if (val === "request-docs") onRequestDocuments();
+                if (val === "employer-list") onEmployerList();
+                if (val === "serviceability") onServiceability();
+                if (val === "lender-policy") onLenderPolicy();
               }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue placeholder="Select Actions" />
@@ -89,6 +92,9 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, on
                   <SelectItem value="request-details">Request Details</SelectItem>
                   <SelectItem value="request-docs">Request Documents</SelectItem>
                   <SelectItem value="request-scrub">Request Scrub</SelectItem>
+                  <SelectItem value="employer-list">Employer List</SelectItem>
+                  <SelectItem value="serviceability">Serviceability</SelectItem>
+                  <SelectItem value="lender-policy">Lender Policy</SelectItem>
                 </SelectContent>
               </Select>
               <Badge variant="secondary" className="text-[10px] cursor-pointer">All</Badge>
