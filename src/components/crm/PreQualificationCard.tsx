@@ -101,8 +101,8 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
             />
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-1.5">
+        <div className="mt-4 flex items-end gap-4">
+          <div className="space-y-1.5 flex-1 max-w-[calc(25%-12px)]">
             <Label className="crm-field-label">Lender Fitment Check</Label>
             <div className="relative">
               <Input
@@ -113,9 +113,7 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
               <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
           </div>
-        </div>
-        <div className="mt-5 flex justify-end">
-          <Button size="sm" className="gap-1.5" onClick={onCheckLenderMatch}>
+          <Button size="sm" className="gap-1.5 h-9" onClick={onCheckLenderMatch}>
             <Search className="h-3.5 w-3.5" />
             Check Lender Match
           </Button>
