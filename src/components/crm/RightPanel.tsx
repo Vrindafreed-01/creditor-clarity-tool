@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Send, Paperclip } from "lucide-react";
+import RequestDetailsModal from "./RequestDetailsModal";
+import RequestDocumentsModal from "./RequestDocumentsModal";
 
 const RightPanel = () => {
   const [noteText, setNoteText] = useState("");
