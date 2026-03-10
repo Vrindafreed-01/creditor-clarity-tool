@@ -73,33 +73,32 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
             </Select>
           </div>
           <div className="space-y-1.5">
+            <Label className="crm-field-label">Current City</Label>
+            <Input
+              value={formData.currentCity}
+              onChange={(e) => setFormData({ ...formData, currentCity: e.target.value })}
+              className="h-9 text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="crm-field-label">Current City Housing</Label>
+            <Select value={formData.currentCityHousing} onValueChange={(v) => setFormData({ ...formData, currentCityHousing: v })}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="owned">Owned</SelectItem>
+                <SelectItem value="rented">Rented</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
             <Label className="crm-field-label">Company Name</Label>
             <Input
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
               className="h-9 text-sm"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="crm-field-label">Company Residing City</Label>
-            <Input
-              value={formData.companyResidingCity}
-              onChange={(e) => setFormData({ ...formData, companyResidingCity: e.target.value })}
-              className="h-9 text-sm"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="crm-field-label">Employment Type</Label>
-            <Select value={formData.employmentType} onValueChange={(v) => setFormData({ ...formData, employmentType: v })}>
-              <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="salaried">Salaried</SelectItem>
-                <SelectItem value="self-employed">Self Employed</SelectItem>
-                <SelectItem value="professional">Professional</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
