@@ -74,7 +74,10 @@ const RightPanel = () => {
         <Card className="shadow-none">
           <CardContent className="p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <Select>
+              <Select onValueChange={(val) => {
+                if (val === "request-details") setRequestDetailsOpen(true);
+                if (val === "request-docs") setRequestDocumentsOpen(true);
+              }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue placeholder="Select Actions" />
                 </SelectTrigger>
