@@ -140,11 +140,11 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: 
           </CardContent>
         </Card>
 
-        {/* Documents */}
+        {/* Upload Documents */}
         <Card className="shadow-none">
           <CardHeader className="p-3 pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Documents</CardTitle>
+              <CardTitle className="text-sm font-medium">Upload Documents</CardTitle>
               <Badge variant="secondary" className="text-[10px] cursor-pointer">All</Badge>
             </div>
           </CardHeader>
@@ -164,6 +164,10 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: 
               <Paperclip className="h-3.5 w-3.5" />
               Document File
             </div>
+            <Textarea
+              placeholder="Add comment..."
+              className="min-h-[50px] text-xs resize-none bg-muted/50"
+            />
             <Button variant="outline" size="sm" className="w-full text-xs" disabled>
               Upload
             </Button>
