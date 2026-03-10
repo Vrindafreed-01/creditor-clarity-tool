@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, ChevronDown, Check } from "lucide-react";
@@ -30,8 +29,11 @@ const requestableDetails = [
   { id: "credit_card", label: "Credit Card Outstanding" },
 ];
 
-const RequestDetailsPage = () => {
-  const navigate = useNavigate();
+interface RequestDetailsViewProps {
+  onClose: () => void;
+}
+
+const RequestDetailsView = ({ onClose }: RequestDetailsViewProps) => {
   const [selected, setSelected] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -54,23 +56,20 @@ const RequestDetailsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
+    <div>
       <div className="border-b px-6 py-3">
         <span className="text-sm text-muted-foreground">Actions</span>
         <span className="text-sm text-muted-foreground mx-2">/</span>
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-lg font-semibold text-foreground">Request Details</h1>
-          <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Dropdown */}
         <div className="flex justify-center mb-6">
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -111,7 +110,6 @@ const RequestDetailsPage = () => {
           </Popover>
         </div>
 
-        {/* Selected tags */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 justify-center mb-8">
             {selected.map((id) => {
@@ -128,9 +126,8 @@ const RequestDetailsPage = () => {
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex items-center justify-center gap-8 pt-4">
-          <Button variant="ghost" className="text-sm text-primary" onClick={() => navigate(-1)}>
+          <Button variant="ghost" className="text-sm text-primary" onClick={onClose}>
             Cancel
           </Button>
           <Button variant="outline" disabled={selected.length === 0}>
@@ -142,4 +139,4 @@ const RequestDetailsPage = () => {
   );
 };
 
-export default RequestDetailsPage;
+export default RequestDetailsView;
