@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +13,13 @@ import {
 } from "@/components/ui/select";
 import { Send, Paperclip } from "lucide-react";
 
-const RightPanel = () => {
-  const navigate = useNavigate();
+interface RightPanelProps {
+  onRequestDetails: () => void;
+  onRequestDocuments: () => void;
+  onAssignSalesRep: () => void;
+}
+
+const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: RightPanelProps) => {
   const [noteText, setNoteText] = useState("");
 
   const notes = [
@@ -72,9 +76,8 @@ const RightPanel = () => {
           <CardContent className="p-3 space-y-2">
             <div className="flex items-center justify-between">
               <Select onValueChange={(val) => {
-                if (val === "request-details") navigate("/actions/request-details");
-                if (val === "request-docs") navigate("/actions/request-documents");
-                if (val === "request-scrub") { /* TODO */ }
+                if (val === "request-details") onRequestDetails();
+                if (val === "request-docs") onRequestDocuments();
               }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue placeholder="Select Actions" />
@@ -89,7 +92,7 @@ const RightPanel = () => {
             </div>
             <div
               className="border-t pt-2 cursor-pointer hover:text-primary transition-colors"
-              onClick={() => navigate("/actions/assign-sales-rep")}
+              onClick={onAssignSalesRep}
             >
               <span className="text-sm font-medium">Assign Sales Rep</span>
             </div>

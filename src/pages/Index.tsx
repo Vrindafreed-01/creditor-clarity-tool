@@ -8,11 +8,48 @@ import ProfileTab from "@/components/crm/ProfileTab";
 import CreditorTab from "@/components/crm/CreditorTab";
 import DocumentsTab from "@/components/crm/DocumentsTab";
 import CalculatorTab from "@/components/crm/CalculatorTab";
+import RequestDetailsView from "@/components/crm/RequestDetailsView";
+import RequestDocumentsView from "@/components/crm/RequestDocumentsView";
+import AssignSalesRepView from "@/components/crm/AssignSalesRepView";
+
+type ActiveView = "main" | "request-details" | "request-documents" | "assign-sales-rep";
 
 const Index = () => {
+  const [activeView, setActiveView] = useState<ActiveView>("main");
+
   const handleCheckLenderMatch = () => {
     const el = document.getElementById("lender-match");
     if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const renderMainContent = () => {
+    switch (activeView) {
+      case "request-details":
+        return <RequestDetailsView onClose={() => setActiveView("main")} />;
+      case "request-documents":
+        return <RequestDocumentsView onClose={() => setActiveView("main")} />;
+      case "assign-sales-rep":
+        return <AssignSalesRepView onClose={() => setActiveView("main")} />;
+      default:
+        return (
+          <div className="max-w-[1100px] mx-auto px-6 py-5">
+            <Tabs defaultValue="profile" className="w-full">
+              <div className="flex justify-center mb-5">
+                <TabsList className="bg-card border h-10 p-1">
+                  <TabsTrigger value="profile" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">PROFILE</TabsTrigger>
+                  <TabsTrigger value="creditor" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CREDITOR</TabsTrigger>
+                  <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">DOCUMENTS</TabsTrigger>
+                  <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CALCULATOR</TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="profile"><ProfileTab onCheckLenderMatch={handleCheckLenderMatch} /></TabsContent>
+              <TabsContent value="creditor"><CreditorTab /></TabsContent>
+              <TabsContent value="documents"><DocumentsTab /></TabsContent>
+              <TabsContent value="calculator"><CalculatorTab /></TabsContent>
+            </Tabs>
+          </div>
+        );
+    }
   };
 
   return (
@@ -30,24 +67,13 @@ const Index = () => {
         <div className="flex flex-1 overflow-hidden">
           <LeftSidebar />
           <main className="flex-1 overflow-y-auto">
-            <div className="max-w-[1100px] mx-auto px-6 py-5">
-              <Tabs defaultValue="profile" className="w-full">
-                <div className="flex justify-center mb-5">
-                  <TabsList className="bg-card border h-10 p-1">
-                    <TabsTrigger value="profile" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">PROFILE</TabsTrigger>
-                    <TabsTrigger value="creditor" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CREDITOR</TabsTrigger>
-                    <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">DOCUMENTS</TabsTrigger>
-                    <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CALCULATOR</TabsTrigger>
-                  </TabsList>
-                </div>
-                <TabsContent value="profile"><ProfileTab onCheckLenderMatch={handleCheckLenderMatch} /></TabsContent>
-                <TabsContent value="creditor"><CreditorTab /></TabsContent>
-                <TabsContent value="documents"><DocumentsTab /></TabsContent>
-                <TabsContent value="calculator"><CalculatorTab /></TabsContent>
-              </Tabs>
-            </div>
+            {renderMainContent()}
           </main>
-          <RightPanel />
+          <RightPanel
+            onRequestDetails={() => setActiveView("request-details")}
+            onRequestDocuments={() => setActiveView("request-documents")}
+            onAssignSalesRep={() => setActiveView("assign-sales-rep")}
+          />
         </div>
       </div>
     </TooltipProvider>
