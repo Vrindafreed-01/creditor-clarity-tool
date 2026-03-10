@@ -50,18 +50,20 @@ const RightPanel = () => {
 
         {/* Active Tasks */}
         <Card className="shadow-none">
-          <CardHeader className="p-3 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-              <TabsList className="h-7 p-0.5 bg-muted">
-                <TabsTrigger value="active" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Active</TabsTrigger>
-                <TabsTrigger value="completed" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Completed</TabsTrigger>
-              </TabsList>
-            </div>
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <p className="text-sm text-muted-foreground text-center py-3">No Task to display</p>
-          </CardContent>
+          <Tabs defaultValue="active">
+            <CardHeader className="p-3 pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
+                <TabsList className="h-7 p-0.5 bg-muted">
+                  <TabsTrigger value="active" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Active</TabsTrigger>
+                  <TabsTrigger value="completed" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Completed</TabsTrigger>
+                </TabsList>
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <p className="text-sm text-muted-foreground text-center py-3">No Task to display</p>
+            </CardContent>
+          </Tabs>
         </Card>
 
         {/* Select Actions */}
