@@ -17,9 +17,12 @@ interface RightPanelProps {
   onRequestDetails: () => void;
   onRequestDocuments: () => void;
   onAssignSalesRep: () => void;
+  onEmployerList: () => void;
+  onServiceability: () => void;
+  onLenderPolicy: () => void;
 }
 
-const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: RightPanelProps) => {
+const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, onEmployerList, onServiceability, onLenderPolicy }: RightPanelProps) => {
   const [noteText, setNoteText] = useState("");
 
   const notes = [
