@@ -48,7 +48,7 @@ const EmploymentDetailsCard = () => {
           <Input value={data.totalWorkExp} onChange={(e) => update("totalWorkExp", e.target.value)} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Employer Name</Label>
+          <Label className="crm-field-label">Company Name</Label>
           <Input value={data.employerName} onChange={(e) => update("employerName", e.target.value)} className="h-9 text-sm" />
         </div>
       </div>
