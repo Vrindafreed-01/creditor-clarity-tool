@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,15 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Send, Paperclip } from "lucide-react";
-import RequestDetailsModal from "./RequestDetailsModal";
-import RequestDocumentsModal from "./RequestDocumentsModal";
 
 const RightPanel = () => {
+  const navigate = useNavigate();
   const [noteText, setNoteText] = useState("");
-  const [requestDetailsOpen, setRequestDetailsOpen] = useState(false);
-  const [requestDocumentsOpen, setRequestDocumentsOpen] = useState(false);
 
   const notes = [
     "Call Nature : Manual-Outbound| Call start time: 2025-03-10 10:30",
@@ -75,8 +72,9 @@ const RightPanel = () => {
           <CardContent className="p-3 space-y-2">
             <div className="flex items-center justify-between">
               <Select onValueChange={(val) => {
-                if (val === "request-details") setRequestDetailsOpen(true);
-                if (val === "request-docs") setRequestDocumentsOpen(true);
+                if (val === "request-details") navigate("/actions/request-details");
+                if (val === "request-docs") navigate("/actions/request-documents");
+                if (val === "request-scrub") { /* TODO */ }
               }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue placeholder="Select Actions" />
@@ -89,7 +87,10 @@ const RightPanel = () => {
               </Select>
               <Badge variant="secondary" className="text-[10px] cursor-pointer">All</Badge>
             </div>
-            <div className="border-t pt-2">
+            <div
+              className="border-t pt-2 cursor-pointer hover:text-primary transition-colors"
+              onClick={() => navigate("/actions/assign-sales-rep")}
+            >
               <span className="text-sm font-medium">Assign Sales Rep</span>
             </div>
           </CardContent>
@@ -185,8 +186,6 @@ const RightPanel = () => {
           </CardContent>
         </Card>
       </div>
-      <RequestDetailsModal open={requestDetailsOpen} onOpenChange={setRequestDetailsOpen} />
-      <RequestDocumentsModal open={requestDocumentsOpen} onOpenChange={setRequestDocumentsOpen} />
     </aside>
   );
 };
