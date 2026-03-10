@@ -17,8 +17,6 @@ interface ClientHeaderProps {
   phone?: string;
   channel?: string;
   onCheckLenderMatch: () => void;
-  onRequestDetails: () => void;
-  onRequestDocuments: () => void;
 }
 
 const CopyableText = ({ text, className = "" }: { text: string; className?: string }) => {
