@@ -13,9 +13,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Send, Paperclip } from "lucide-react";
+import RequestDetailsModal from "./RequestDetailsModal";
+import RequestDocumentsModal from "./RequestDocumentsModal";
 
 const RightPanel = () => {
   const [noteText, setNoteText] = useState("");
+  const [requestDetailsOpen, setRequestDetailsOpen] = useState(false);
+  const [requestDocumentsOpen, setRequestDocumentsOpen] = useState(false);
 
   const notes = [
     "Call Nature : Manual-Outbound| Call start time: 2025-03-10 10:30",
@@ -70,7 +74,10 @@ const RightPanel = () => {
         <Card className="shadow-none">
           <CardContent className="p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <Select>
+              <Select onValueChange={(val) => {
+                if (val === "request-details") setRequestDetailsOpen(true);
+                if (val === "request-docs") setRequestDocumentsOpen(true);
+              }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue placeholder="Select Actions" />
                 </SelectTrigger>
@@ -178,6 +185,8 @@ const RightPanel = () => {
           </CardContent>
         </Card>
       </div>
+      <RequestDetailsModal open={requestDetailsOpen} onOpenChange={setRequestDetailsOpen} />
+      <RequestDocumentsModal open={requestDocumentsOpen} onOpenChange={setRequestDocumentsOpen} />
     </aside>
   );
 };
