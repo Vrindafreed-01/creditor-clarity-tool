@@ -5,17 +5,20 @@ import ClientHeader from "@/components/crm/ClientHeader";
 import LeftSidebar from "@/components/crm/LeftSidebar";
 import RightPanel from "@/components/crm/RightPanel";
 import ProfileTab from "@/components/crm/ProfileTab";
-import CreditorTab from "@/components/crm/CreditorTab";
+import CreditorCalculatorTab from "@/components/crm/CreditorCalculatorTab";
 import DocumentsTab from "@/components/crm/DocumentsTab";
-import CalculatorTab from "@/components/crm/CalculatorTab";
 import RequestDetailsView from "@/components/crm/RequestDetailsView";
 import RequestDocumentsView from "@/components/crm/RequestDocumentsView";
 import AssignSalesRepView from "@/components/crm/AssignSalesRepView";
+import EmployerListModal from "@/components/crm/EmployerListModal";
+import ServiceabilityListModal from "@/components/crm/ServiceabilityListModal";
 
 type ActiveView = "main" | "request-details" | "request-documents" | "assign-sales-rep";
 
 const Index = () => {
   const [activeView, setActiveView] = useState<ActiveView>("main");
+  const [employerModalOpen, setEmployerModalOpen] = useState(false);
+  const [serviceabilityModalOpen, setServiceabilityModalOpen] = useState(false);
 
   const handleCheckLenderMatch = () => {
     const el = document.getElementById("lender-match");
@@ -39,13 +42,11 @@ const Index = () => {
                   <TabsTrigger value="profile" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">PROFILE</TabsTrigger>
                   <TabsTrigger value="creditor" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CREDITOR</TabsTrigger>
                   <TabsTrigger value="documents" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">DOCUMENTS</TabsTrigger>
-                  <TabsTrigger value="calculator" className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CALCULATOR</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="profile"><ProfileTab onCheckLenderMatch={handleCheckLenderMatch} /></TabsContent>
-              <TabsContent value="creditor"><CreditorTab /></TabsContent>
+              <TabsContent value="creditor"><CreditorCalculatorTab /></TabsContent>
               <TabsContent value="documents"><DocumentsTab /></TabsContent>
-              <TabsContent value="calculator"><CalculatorTab /></TabsContent>
             </Tabs>
           </div>
         );
@@ -73,8 +74,14 @@ const Index = () => {
             onRequestDetails={() => setActiveView("request-details")}
             onRequestDocuments={() => setActiveView("request-documents")}
             onAssignSalesRep={() => setActiveView("assign-sales-rep")}
+            onEmployerList={() => setEmployerModalOpen(true)}
+            onServiceability={() => setServiceabilityModalOpen(true)}
+            onLenderPolicy={() => {}}
           />
         </div>
+
+        <EmployerListModal open={employerModalOpen} onOpenChange={setEmployerModalOpen} />
+        <ServiceabilityListModal open={serviceabilityModalOpen} onOpenChange={setServiceabilityModalOpen} />
       </div>
     </TooltipProvider>
   );

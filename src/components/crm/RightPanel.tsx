@@ -17,9 +17,12 @@ interface RightPanelProps {
   onRequestDetails: () => void;
   onRequestDocuments: () => void;
   onAssignSalesRep: () => void;
+  onEmployerList: () => void;
+  onServiceability: () => void;
+  onLenderPolicy: () => void;
 }
 
-const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: RightPanelProps) => {
+const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, onEmployerList, onServiceability, onLenderPolicy }: RightPanelProps) => {
   const [noteText, setNoteText] = useState("");
 
   const notes = [
@@ -78,6 +81,9 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: 
               <Select onValueChange={(val) => {
                 if (val === "request-details") onRequestDetails();
                 if (val === "request-docs") onRequestDocuments();
+                if (val === "employer-list") onEmployerList();
+                if (val === "serviceability") onServiceability();
+                if (val === "lender-policy") onLenderPolicy();
               }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue placeholder="Select Actions" />
@@ -86,6 +92,9 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: 
                   <SelectItem value="request-details">Request Details</SelectItem>
                   <SelectItem value="request-docs">Request Documents</SelectItem>
                   <SelectItem value="request-scrub">Request Scrub</SelectItem>
+                  <SelectItem value="employer-list">Employer List</SelectItem>
+                  <SelectItem value="serviceability">Serviceability</SelectItem>
+                  <SelectItem value="lender-policy">Lender Policy</SelectItem>
                 </SelectContent>
               </Select>
               <Badge variant="secondary" className="text-[10px] cursor-pointer">All</Badge>
@@ -140,11 +149,11 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: 
           </CardContent>
         </Card>
 
-        {/* Documents */}
+        {/* Upload Documents */}
         <Card className="shadow-none">
           <CardHeader className="p-3 pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Documents</CardTitle>
+              <CardTitle className="text-sm font-medium">Upload Documents</CardTitle>
               <Badge variant="secondary" className="text-[10px] cursor-pointer">All</Badge>
             </div>
           </CardHeader>
@@ -164,6 +173,10 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep }: 
               <Paperclip className="h-3.5 w-3.5" />
               Document File
             </div>
+            <Textarea
+              placeholder="Add comment..."
+              className="min-h-[50px] text-xs resize-none bg-muted/50"
+            />
             <Button variant="outline" size="sm" className="w-full text-xs" disabled>
               Upload
             </Button>
