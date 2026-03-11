@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Copy, CreditCard, FileText, Users, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -43,9 +42,8 @@ const ClientHeader = ({
   channel = "DCP",
 }: ClientHeaderProps) => {
   return (
-    <div className="sticky top-0 z-30 bg-card border-b">
-      {/* Main client info bar */}
-      <div className="px-6 py-3 max-w-[1400px] mx-auto">
+    <div className="sticky top-0 z-30 bg-card border-b shadow-sm">
+      <div className="px-6 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <CopyableText text={clientId} className="text-sm font-medium text-primary" />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Pencil, MessageSquare, Archive, Check, X } from "lucide-react";
+import { Upload, Pencil } from "lucide-react";
 
 const documentTypes = [
   "Income Proof - Salary Slip",
@@ -57,42 +57,30 @@ const initialDocs: Document[] = [
   { id: "6", name: "Form 16 - FY 2023-24", type: "Income Proof - Form 16", dateRange: "FY 2023-24", comment: "", usedForLogin: false, archived: false },
 ];
 
-const DocumentManager = () => {
+interface DocumentManagerProps {
+  isEditing?: boolean;
+}
+
+const DocumentManager = ({ isEditing = false }: DocumentManagerProps) => {
   const [docs, setDocs] = useState<Document[]>(initialDocs);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [editingNameId, setEditingNameId] = useState<string | null>(null);
-  const [editingNameValue, setEditingNameValue] = useState("");
 
-  const toggleField = (id: string, field: "usedForLogin" | "archived") => {
-    setDocs(docs.map((d) => (d.id === id ? { ...d, [field]: !d[field] } : d)));
-  };
-
-  const handleTypeChange = (id: string, newType: string) => {
-    setDocs(docs.map((d) => (d.id === id ? { ...d, type: newType } : d)));
-  };
-
-  const startRename = (doc: Document) => {
-    setEditingNameId(doc.id);
-    setEditingNameValue(doc.name);
-  };
-
-  const confirmRename = () => {
-    if (editingNameId) {
-      setDocs(docs.map((d) => (d.id === editingNameId ? { ...d, name: editingNameValue } : d)));
-      setEditingNameId(null);
-      setEditingNameValue("");
-    }
-  };
-
-  const cancelRename = () => {
-    setEditingNameId(null);
-    setEditingNameValue("");
+  const updateDoc = (id: string, field: keyof Document, value: string | boolean) => {
+    setDocs(docs.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
   };
 
   return (
-    <div className="bg-card rounded-lg border">
+    <div className={`bg-card rounded-lg border transition-all duration-200 ${isEditing ? "border-amber-300 ring-1 ring-amber-200" : ""}`}>
       <div className="flex items-center justify-between px-5 py-4">
-        <h3 className="text-sm font-semibold text-foreground">Document Manager</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground">Document Manager</h3>
+          {isEditing && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-400 text-amber-700 bg-amber-50 gap-1">
+              <Pencil className="h-2.5 w-2.5" />
+              Editing
+            </Badge>
+          )}
+        </div>
         <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-1.5 text-xs">
@@ -147,39 +135,28 @@ const DocumentManager = () => {
             <TableHead className="text-xs">Date Range</TableHead>
             <TableHead className="text-xs">Comment</TableHead>
             <TableHead className="text-xs text-center">Used for Login</TableHead>
-            <TableHead className="text-xs text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {docs.filter((d) => !d.archived).map((doc) => (
-            <TableRow key={doc.id}>
+            <TableRow key={doc.id} className={isEditing ? "bg-amber-50/30" : ""}>
+              {/* Document Name */}
               <TableCell>
-                {editingNameId === doc.id ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      value={editingNameValue}
-                      onChange={(e) => setEditingNameValue(e.target.value)}
-                      className="h-7 text-sm w-48"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") confirmRename();
-                        if (e.key === "Escape") cancelRename();
-                      }}
-                    />
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-status-eligible-foreground" onClick={confirmRename}>
-                      <Check className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground" onClick={cancelRename}>
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                {isEditing ? (
+                  <Input
+                    value={doc.name}
+                    onChange={(e) => updateDoc(doc.id, "name", e.target.value)}
+                    className="h-7 text-sm w-48 py-0 px-2"
+                  />
                 ) : (
                   <span className="text-sm font-medium">{doc.name}</span>
                 )}
               </TableCell>
+
+              {/* Type — always a Select */}
               <TableCell>
-                <Select value={doc.type} onValueChange={(v) => handleTypeChange(doc.id, v)}>
-                  <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 pl-1 focus:ring-0 w-auto min-w-[180px]">
+                <Select value={doc.type} onValueChange={(v) => updateDoc(doc.id, "type", v)}>
+                  <SelectTrigger className={`h-7 text-xs border-0 bg-transparent p-0 pl-1 focus:ring-0 w-auto min-w-[180px] ${isEditing ? "border border-input rounded-md bg-background px-2" : ""}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -189,14 +166,40 @@ const DocumentManager = () => {
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">{doc.dateRange || "—"}</TableCell>
-              <TableCell className="text-sm text-muted-foreground">{doc.comment || "—"}</TableCell>
+
+              {/* Date Range */}
+              <TableCell>
+                {isEditing ? (
+                  <Input
+                    value={doc.dateRange}
+                    onChange={(e) => updateDoc(doc.id, "dateRange", e.target.value)}
+                    placeholder="e.g. Jan 2024"
+                    className="h-7 text-sm w-36 py-0 px-2"
+                  />
+                ) : (
+                  <span className="text-sm text-muted-foreground">{doc.dateRange || "—"}</span>
+                )}
+              </TableCell>
+
+              {/* Comment */}
+              <TableCell>
+                {isEditing ? (
+                  <Input
+                    value={doc.comment}
+                    onChange={(e) => updateDoc(doc.id, "comment", e.target.value)}
+                    placeholder="Add comment"
+                    className="h-7 text-sm w-40 py-0 px-2"
+                  />
+                ) : (
+                  <span className="text-sm text-muted-foreground">{doc.comment || "—"}</span>
+                )}
+              </TableCell>
+
+              {/* Used for Login — always a Select */}
               <TableCell className="text-center">
                 <Select
                   value={doc.usedForLogin ? "yes" : "no"}
-                  onValueChange={(v) => {
-                    setDocs(docs.map((d) => (d.id === doc.id ? { ...d, usedForLogin: v === "yes" } : d)));
-                  }}
+                  onValueChange={(v) => updateDoc(doc.id, "usedForLogin", v === "yes")}
                 >
                   <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 pl-1 focus:ring-0 w-auto min-w-[60px] mx-auto">
                     <SelectValue />
@@ -206,19 +209,6 @@ const DocumentManager = () => {
                     <SelectItem value="no">No</SelectItem>
                   </SelectContent>
                 </Select>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center justify-center gap-1">
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground" onClick={() => startRename(doc)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => toggleField(doc.id, "archived")}>
-                    <Archive className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
               </TableCell>
             </TableRow>
           ))}

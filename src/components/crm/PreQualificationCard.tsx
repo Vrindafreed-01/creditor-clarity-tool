@@ -9,14 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Download } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface PreQualificationCardProps {
   onCheckLenderMatch: () => void;
 }
 
 const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps) => {
-  const [totalOutstanding, setTotalOutstanding] = useState("");
   const [formData, setFormData] = useState({
     netSalary: "",
     residingCity: "",
@@ -24,46 +23,16 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
     currentCity: "",
     currentCityHousing: "",
     companyName: "",
+    employmentType: "",
     lenderFitmentCheck: "",
   });
 
   return (
     <div className="space-y-4">
-      {/* Total Outstanding */}
-      <div className="bg-card rounded-lg border p-4 flex items-center justify-between">
-        <Label className="text-sm font-semibold text-foreground">Total Outstanding</Label>
-        <Input
-          value={totalOutstanding}
-          onChange={(e) => setTotalOutstanding(e.target.value)}
-          className="h-9 text-sm w-60"
-          placeholder="Enter amount"
-        />
-      </div>
-
       {/* Qualification Details */}
       <div className="bg-card rounded-lg border p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-foreground">Qualification Details</h3>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs"
-            onClick={() => {
-              const headers = ["Net Inhand Salary", "Residing City", "Housing Type", "Current City", "Current City Housing", "Company Name", "Lender Fitment Check"];
-              const values = [formData.netSalary, formData.residingCity, formData.housingType, formData.currentCity, formData.currentCityHousing, formData.companyName, formData.lenderFitmentCheck];
-              const csv = [headers.join(","), values.join(",")].join("\n");
-              const blob = new Blob([csv], { type: "text/csv" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "qualification_details.csv";
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-          >
-            <Download className="h-3.5 w-3.5" />
-            Download CSV
-          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
@@ -121,6 +90,20 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
               className="h-9 text-sm"
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="crm-field-label">Employment Type</Label>
+            <Select value={formData.employmentType} onValueChange={(v) => setFormData({ ...formData, employmentType: v })}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="salaried">Salaried</SelectItem>
+                <SelectItem value="self-employed">Self Employed</SelectItem>
+                <SelectItem value="self-employed-professional">Self Employed Professional</SelectItem>
+                <SelectItem value="business">Business</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="mt-4 flex items-end gap-4">

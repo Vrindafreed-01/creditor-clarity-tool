@@ -2,16 +2,31 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Send, Paperclip } from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Send,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  ClipboardList,
+  Building2,
+  MapPin,
+  BookOpen,
+  UserRound,
+  ShieldCheck,
+  Download,
+  RotateCcw,
+  FileCheck,
+} from "lucide-react";
+import { ScrubTask, ScrubStatus, SCRUB_STATUS_CONFIG, CAN_REREQUREST_SCRUB } from "@/types/scrub";
 
 interface RightPanelProps {
   onRequestDetails: () => void;
@@ -20,10 +35,51 @@ interface RightPanelProps {
   onEmployerList: () => void;
   onServiceability: () => void;
   onLenderPolicy: () => void;
+  // Scrub
+  scrubTasks: ScrubTask[];
+  onRequestScrub: () => void;
+  onScrubFileClick: (task: ScrubTask) => void;
 }
 
-const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, onEmployerList, onServiceability, onLenderPolicy }: RightPanelProps) => {
+interface ActionRowProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  iconBg?: string;
+}
+
+const ActionRow = ({ icon, label, onClick, iconBg = "bg-muted" }: ActionRowProps) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left hover:bg-muted/60 transition-colors group"
+  >
+    <div className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 ${iconBg}`}>
+      {icon}
+    </div>
+    <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors flex-1">
+      {label}
+    </span>
+    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+  </button>
+);
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+const RightPanel = ({
+  onRequestDetails,
+  onRequestDocuments,
+  onAssignSalesRep,
+  onEmployerList,
+  onServiceability,
+  onLenderPolicy,
+  scrubTasks,
+  onRequestScrub,
+  onScrubFileClick,
+}: RightPanelProps) => {
   const [noteText, setNoteText] = useState("");
+  const [requestInfoOpen, setRequestInfoOpen] = useState(false);
+  const [scrubSectionOpen, setScrubSectionOpen] = useState(true);
 
   const notes = [
     "Call Nature : Manual-Outbound| Call start time: 2025-03-10 10:30",
@@ -32,15 +88,23 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, on
   ];
 
   const handleAddNote = () => {
-    if (noteText.trim()) {
-      setNoteText("");
-    }
+    if (noteText.trim()) setNoteText("");
   };
+
+  // Latest scrub task (most recent)
+  const latestScrub = scrubTasks.length > 0 ? scrubTasks[scrubTasks.length - 1] : null;
+  const latestCfg = latestScrub ? SCRUB_STATUS_CONFIG[latestScrub.status] : null;
+
+  // Can re-request scrub?
+  const canRerequest =
+    !latestScrub || CAN_REREQUREST_SCRUB.includes(latestScrub.status as ScrubStatus);
+  const isFirstRequest = !latestScrub;
 
   return (
     <aside className="sticky top-0 h-screen w-[300px] bg-card border-l overflow-y-auto shrink-0 z-30">
-      <div className="p-4 space-y-4">
-        {/* Sales Rep */}
+      <div className="p-4 space-y-3">
+
+        {/* ── Sales Rep / RM ── */}
         <Card className="shadow-none">
           <CardContent className="p-3 space-y-2">
             <div className="flex items-center justify-between">
@@ -56,67 +120,43 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, on
           </CardContent>
         </Card>
 
-        {/* Active Tasks */}
+        {/* ── Quick Actions (grouped card) ── */}
         <Card className="shadow-none">
-          <Tabs defaultValue="active">
-            <CardHeader className="p-3 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-                <TabsList className="h-7 p-0.5 bg-muted">
-                  <TabsTrigger value="active" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Active</TabsTrigger>
-                  <TabsTrigger value="completed" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Completed</TabsTrigger>
-                </TabsList>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              <p className="text-sm text-muted-foreground text-center py-3">No Task to display</p>
-            </CardContent>
-          </Tabs>
-        </Card>
-
-        {/* Select Actions */}
-        <Card className="shadow-none">
-          <CardContent className="p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <Select onValueChange={(val) => {
-                if (val === "request-details") onRequestDetails();
-                if (val === "request-docs") onRequestDocuments();
-                if (val === "employer-list") onEmployerList();
-                if (val === "serviceability") onServiceability();
-                if (val === "lender-policy") onLenderPolicy();
-              }}>
-                <SelectTrigger className="w-[160px] h-8 text-xs">
-                  <SelectValue placeholder="Select Actions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="request-details">Request Details</SelectItem>
-                  <SelectItem value="request-docs">Request Documents</SelectItem>
-                  <SelectItem value="request-scrub">Request Scrub</SelectItem>
-                  <SelectItem value="employer-list">Employer List</SelectItem>
-                  <SelectItem value="serviceability">Serviceability</SelectItem>
-                  <SelectItem value="lender-policy">Lender Policy</SelectItem>
-                </SelectContent>
-              </Select>
-              <Badge variant="secondary" className="text-[10px] cursor-pointer">All</Badge>
-            </div>
-            <div
-              className="border-t pt-2 cursor-pointer hover:text-primary transition-colors"
-              onClick={onAssignSalesRep}
-            >
-              <span className="text-sm font-medium">Assign Sales Rep</span>
-            </div>
+          <CardContent className="p-2 space-y-0.5">
+            <ActionRow
+              icon={<Building2 className="h-3.5 w-3.5 text-blue-600" />}
+              label="Employers List"
+              onClick={onEmployerList}
+              iconBg="bg-blue-50"
+            />
+            <ActionRow
+              icon={<MapPin className="h-3.5 w-3.5 text-emerald-600" />}
+              label="Serviceability List"
+              onClick={onServiceability}
+              iconBg="bg-emerald-50"
+            />
+            <ActionRow
+              icon={<BookOpen className="h-3.5 w-3.5 text-violet-600" />}
+              label="Lender Policy"
+              onClick={onLenderPolicy}
+              iconBg="bg-violet-50"
+            />
           </CardContent>
         </Card>
 
-        {/* Notes */}
+        {/* ── Notes (as per Spine) ── */}
         <Card className="shadow-none">
           <CardHeader className="p-3 pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium">Notes</CardTitle>
               <Tabs defaultValue="notes">
                 <TabsList className="h-7 p-0.5 bg-muted">
-                  <TabsTrigger value="notes" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Notes</TabsTrigger>
-                  <TabsTrigger value="highlighted" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Highlighted</TabsTrigger>
+                  <TabsTrigger value="notes" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">
+                    Notes
+                  </TabsTrigger>
+                  <TabsTrigger value="highlighted" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">
+                    Highlighted
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -149,58 +189,205 @@ const RightPanel = ({ onRequestDetails, onRequestDocuments, onAssignSalesRep, on
           </CardContent>
         </Card>
 
-        {/* Upload Documents */}
+        {/* ── Request Information ▼ ── */}
         <Card className="shadow-none">
-          <CardHeader className="p-3 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Upload Documents</CardTitle>
-              <Badge variant="secondary" className="text-[10px] cursor-pointer">All</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 space-y-2">
-            <Select>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Document Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pan">PAN Card</SelectItem>
-                <SelectItem value="aadhar">Aadhar Card</SelectItem>
-                <SelectItem value="salary-slip">Salary Slip</SelectItem>
-                <SelectItem value="bank-statement">Bank Statement</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex items-center gap-2 border rounded-md px-3 py-2 text-xs text-muted-foreground cursor-pointer hover:bg-accent transition-colors">
-              <Paperclip className="h-3.5 w-3.5" />
-              Document File
-            </div>
-            <Textarea
-              placeholder="Add comment..."
-              className="min-h-[50px] text-xs resize-none bg-muted/50"
-            />
-            <Button variant="outline" size="sm" className="w-full text-xs" disabled>
-              Upload
-            </Button>
+          <CardContent className="p-3">
+            <button
+              onClick={() => setRequestInfoOpen(!requestInfoOpen)}
+              className="flex items-center w-full text-left"
+            >
+              <span className="text-sm font-medium text-foreground flex-1">
+                Request Information
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                  requestInfoOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {requestInfoOpen && (
+              <div className="mt-3 border-t pt-3 space-y-1">
+                <button
+                  onClick={onRequestDetails}
+                  className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left hover:bg-muted/60 transition-colors group"
+                >
+                  <div className="h-7 w-7 rounded-md bg-blue-50 flex items-center justify-center shrink-0">
+                    <ClipboardList className="h-3.5 w-3.5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary leading-none mb-0.5">
+                      Request Details
+                    </p>
+                    <p className="text-[10px] text-muted-foreground leading-none">
+                      Request client information
+                    </p>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                </button>
+
+                <button
+                  onClick={onRequestDocuments}
+                  className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left hover:bg-muted/60 transition-colors group"
+                >
+                  <div className="h-7 w-7 rounded-md bg-violet-50 flex items-center justify-center shrink-0">
+                    <FileText className="h-3.5 w-3.5 text-violet-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground group-hover:text-primary leading-none mb-0.5">
+                      Request Document
+                    </p>
+                    <p className="text-[10px] text-muted-foreground leading-none">
+                      Request client documents
+                    </p>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                </button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Tickets */}
+        {/* ── Assign Sales Rep ── */}
         <Card className="shadow-none">
-          <CardHeader className="p-3 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Tickets</CardTitle>
-              <Tabs defaultValue="active">
-                <TabsList className="h-7 p-0.5 bg-muted">
-                  <TabsTrigger value="active" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Active</TabsTrigger>
-                  <TabsTrigger value="completed" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Completed</TabsTrigger>
-                  <TabsTrigger value="subscribed" className="text-[10px] px-2 h-6 data-[state=active]:bg-card">Subscribed</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <p className="text-sm text-muted-foreground text-center py-3">No Tickets to display</p>
+          <CardContent className="p-2">
+            <ActionRow
+              icon={<UserRound className="h-3.5 w-3.5 text-primary" />}
+              label="Assign Sales Rep"
+              onClick={onAssignSalesRep}
+              iconBg="bg-primary/10"
+            />
           </CardContent>
         </Card>
+
+        {/* ── Scrub ── */}
+        <Card className={`shadow-none ${latestScrub ? "border-violet-200" : ""}`}>
+          <CardContent className="p-3 space-y-3">
+            {/* Header row */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setScrubSectionOpen(!scrubSectionOpen)}
+                className="flex items-center gap-2 flex-1 text-left"
+              >
+                <div className="h-6 w-6 rounded-md bg-violet-100 flex items-center justify-center">
+                  <ShieldCheck className="h-3.5 w-3.5 text-violet-600" />
+                </div>
+                <span className="text-sm font-medium text-foreground">Scrub</span>
+                {latestScrub && latestCfg && (
+                  <Badge variant="outline" className={`text-[10px] h-4 px-1.5 border ${latestCfg.badgeClass}`}>
+                    {latestCfg.label}
+                  </Badge>
+                )}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-muted-foreground ml-auto transition-transform ${scrubSectionOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {/* Actions dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 gap-1 text-xs ml-2 shrink-0">
+                    Actions
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    onClick={onRequestScrub}
+                    disabled={!isFirstRequest && !canRerequest}
+                    className="gap-2 text-sm cursor-pointer"
+                  >
+                    {canRerequest && !isFirstRequest ? (
+                      <RotateCcw className="h-4 w-4 text-violet-600" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4 text-violet-600" />
+                    )}
+                    {canRerequest && !isFirstRequest ? "Re-request Scrub" : "Request Scrub"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 text-sm cursor-pointer">
+                    <Download className="h-4 w-4 text-muted-foreground" />
+                    Download Login Sheet
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Expanded content */}
+            {scrubSectionOpen && (
+              <>
+                {/* Current stage */}
+                {latestScrub && latestCfg && (
+                  <div className={`rounded-lg p-2.5 ${latestCfg.bgClass} border ${latestCfg.badgeClass.split(" ").find(c => c.startsWith("border-")) || ""}`}>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
+                      Client File Stage
+                    </p>
+                    <p className={`text-sm font-semibold ${latestCfg.colorClass}`}>
+                      {latestCfg.clientStage}
+                    </p>
+                    {latestScrub.comment && (
+                      <p className="text-[11px] text-muted-foreground mt-1 italic">
+                        "{latestScrub.comment}"
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Scrub files list */}
+                {scrubTasks.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      Scrub Files ({scrubTasks.length})
+                    </p>
+                    {[...scrubTasks].reverse().map((task, idx) => {
+                      const cfg = SCRUB_STATUS_CONFIG[task.status];
+                      return (
+                        <button
+                          key={task.id}
+                          onClick={() => onScrubFileClick(task)}
+                          className="flex items-start gap-2.5 w-full rounded-lg p-2.5 text-left border hover:border-primary/30 hover:bg-primary/5 transition-colors group"
+                        >
+                          <div className="h-7 w-7 rounded-md bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
+                            <FileCheck className="h-3.5 w-3.5 text-violet-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-xs font-medium text-foreground leading-none">
+                                Scrub #{scrubTasks.length - idx}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className={`text-[9px] h-3.5 px-1 border ${cfg.badgeClass}`}
+                              >
+                                {cfg.label}
+                              </Badge>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground leading-none">
+                              {formatDate(task.requestedAt)}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
+                              TL: {task.assignedTL}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-primary mt-1.5" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-3">
+                    <ShieldCheck className="h-6 w-6 text-muted-foreground/30 mx-auto mb-1" />
+                    <p className="text-[11px] text-muted-foreground">No scrub requested yet</p>
+                    <p className="text-[10px] text-muted-foreground/60">
+                      Use Actions → Request Scrub
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
       </div>
     </aside>
   );
