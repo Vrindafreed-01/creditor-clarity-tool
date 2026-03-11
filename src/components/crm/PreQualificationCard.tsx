@@ -21,9 +21,9 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
     residingCity: "",
     housingType: "",
     currentCity: "",
-    currentCityHousing: "",
     companyName: "",
     employmentType: "",
+    recentBounces: "",
     lenderFitmentCheck: "",
   });
 
@@ -72,18 +72,6 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="crm-field-label">Current City Housing</Label>
-            <Select value={formData.currentCityHousing} onValueChange={(v) => setFormData({ ...formData, currentCityHousing: v })}>
-              <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="owned">Owned</SelectItem>
-                <SelectItem value="rented">Rented</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
             <Label className="crm-field-label">Company Name</Label>
             <Input
               value={formData.companyName}
@@ -102,6 +90,18 @@ const PreQualificationCard = ({ onCheckLenderMatch }: PreQualificationCardProps)
                 <SelectItem value="self-employed">Self Employed</SelectItem>
                 <SelectItem value="self-employed-professional">Self Employed Professional</SelectItem>
                 <SelectItem value="business">Business</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="crm-field-label">Recent Bounces (last 6 months)</Label>
+            <Select value={formData.recentBounces} onValueChange={(v) => setFormData({ ...formData, recentBounces: v })}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
               </SelectContent>
             </Select>
           </div>

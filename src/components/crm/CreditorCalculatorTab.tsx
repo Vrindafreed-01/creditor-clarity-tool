@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -19,12 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Plus, Minus, ChevronDown, FileSpreadsheet, Columns, Group } from "lucide-react";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Plus, Minus, X } from "lucide-react";
 
 interface Creditor {
   id: string;
@@ -60,174 +60,10 @@ const initialExcluded: Creditor[] = [
 
 const fmt = (n: number) => `₹${Math.round(n).toLocaleString()}`;
 
-/* ── Editable cell helper ── */
-const EditCell = ({
-  value,
-  isEditing,
-  onChange,
-  type = "text",
-  className = "",
-}: {
-  value: string | number;
-  isEditing: boolean;
-  onChange: (v: string) => void;
-  type?: string;
-  className?: string;
-}) =>
-  isEditing ? (
-    <Input
-      value={value}
-      type={type}
-      onChange={(e) => onChange(e.target.value)}
-      className={`h-6 text-[11px] py-0 px-1.5 min-w-[60px] ${className}`}
-    />
-  ) : null;
-
-/* ── Creditor row ── */
-const CreditorRow = ({
-  creditor,
-  actionIcon,
-  actionLabel,
-  actionClass,
-  onAction,
-  isEditing,
-  onUpdate,
-}: {
-  creditor: Creditor;
-  actionIcon: React.ReactNode;
-  actionLabel: string;
-  actionClass: string;
-  onAction: (id: string) => void;
-  isEditing: boolean;
-  onUpdate: (id: string, field: keyof Creditor, value: string | number) => void;
-}) => (
-  <TableRow className={`group ${isEditing ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-muted/30"}`}>
-    <TableCell className="px-2 py-1.5 w-8">
-      <button
-        onClick={() => onAction(creditor.id)}
-        title={actionLabel}
-        className={`h-5 w-5 rounded-full border flex items-center justify-center transition-all opacity-50 group-hover:opacity-100 ${actionClass}`}
-      >
-        {actionIcon}
-      </button>
-    </TableCell>
-
-    {/* Creditor Name */}
-    <TableCell className="px-2 py-1.5 max-w-[100px]">
-      {isEditing ? (
-        <Input
-          value={creditor.name}
-          onChange={(e) => onUpdate(creditor.id, "name", e.target.value)}
-          className="h-6 text-[11px] py-0 px-1.5 min-w-[80px] font-medium text-primary"
-        />
-      ) : (
-        <span className="block truncate text-[11px] font-medium text-primary" title={creditor.name}>
-          {creditor.name}
-        </span>
-      )}
-    </TableCell>
-
-    {/* Debt Type */}
-    <TableCell className="px-2 py-1.5">
-      {isEditing ? (
-        <Select
-          value={creditor.debtType}
-          onValueChange={(v) => onUpdate(creditor.id, "debtType", v)}
-        >
-          <SelectTrigger className="h-6 text-[10px] py-0 px-1.5 min-w-[90px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DEBT_TYPES.map((t) => (
-              <SelectItem key={t} value={t} className="text-xs">
-                {t.replace(/_/g, " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
-        <Badge variant="outline" className="text-[9px] px-1 py-0 font-normal whitespace-nowrap border-muted-foreground/30">
-          {creditor.debtType.replace(/_/g, "\u00A0")}
-        </Badge>
-      )}
-    </TableCell>
-
-    {/* Account No. */}
-    <TableCell className="px-2 py-1.5 max-w-[90px]">
-      {isEditing ? (
-        <Input
-          value={creditor.accountNumber}
-          onChange={(e) => onUpdate(creditor.id, "accountNumber", e.target.value)}
-          className="h-6 text-[11px] py-0 px-1.5 min-w-[80px] text-muted-foreground"
-        />
-      ) : (
-        <span className="block truncate text-[11px] text-muted-foreground" title={creditor.accountNumber}>
-          {creditor.accountNumber}
-        </span>
-      )}
-    </TableCell>
-
-    {/* Open Date */}
-    <TableCell className="px-2 py-1.5">
-      {isEditing ? (
-        <Input
-          value={creditor.openDate}
-          onChange={(e) => onUpdate(creditor.id, "openDate", e.target.value)}
-          className="h-6 text-[11px] py-0 px-1.5 min-w-[70px] text-muted-foreground"
-        />
-      ) : (
-        <span className="text-[11px] text-muted-foreground whitespace-nowrap">{creditor.openDate}</span>
-      )}
-    </TableCell>
-
-    {/* Sanctioned */}
-    <TableCell className="px-2 py-1.5 text-right">
-      {isEditing ? (
-        <Input
-          type="number"
-          value={creditor.sanctionedAmount}
-          onChange={(e) => onUpdate(creditor.id, "sanctionedAmount", Number(e.target.value))}
-          className="h-6 text-[11px] py-0 px-1.5 min-w-[70px] text-right"
-        />
-      ) : (
-        <span className="text-[11px] whitespace-nowrap">{fmt(creditor.sanctionedAmount)}</span>
-      )}
-    </TableCell>
-
-    {/* Balance */}
-    <TableCell className="px-2 py-1.5 text-right">
-      {isEditing ? (
-        <Input
-          type="number"
-          value={creditor.currentBalance}
-          onChange={(e) => onUpdate(creditor.id, "currentBalance", Number(e.target.value))}
-          className="h-6 text-[11px] py-0 px-1.5 min-w-[70px] text-right"
-        />
-      ) : (
-        <span className="text-[11px] whitespace-nowrap">{fmt(creditor.currentBalance)}</span>
-      )}
-    </TableCell>
-
-    {/* EMI */}
-    <TableCell className="px-2 py-1.5 text-right">
-      {isEditing ? (
-        <Input
-          type="number"
-          value={creditor.emi}
-          onChange={(e) => onUpdate(creditor.id, "emi", Number(e.target.value))}
-          className="h-6 text-[11px] py-0 px-1.5 min-w-[60px] text-right font-medium"
-        />
-      ) : (
-        <span className="text-[11px] whitespace-nowrap font-medium">
-          {creditor.emi > 0 ? fmt(creditor.emi) : "—"}
-        </span>
-      )}
-    </TableCell>
-  </TableRow>
-);
-
-const TableColumns = () => (
+/* ── Table column headers ── */
+const TableColumns = ({ isEditing }: { isEditing: boolean }) => (
   <TableRow className="hover:bg-transparent">
+    {isEditing && <TableHead className="w-8 px-2 py-2" />}
     <TableHead className="w-8 px-2 py-2" />
     <TableHead className="text-[10px] px-2 py-2 font-semibold min-w-[90px]">Creditor Name</TableHead>
     <TableHead className="text-[10px] px-2 py-2 font-semibold min-w-[80px]">Debt Type</TableHead>
@@ -239,11 +75,193 @@ const TableColumns = () => (
   </TableRow>
 );
 
-interface CreditorCalculatorTabProps {
-  isEditing?: boolean;
+/* ── Creditor row ── */
+const CreditorRow = ({
+  creditor,
+  actionLabel,
+  actionBtnClass,
+  actionIcon,
+  onAction,
+  isEditing,
+  isSelected,
+  onSelect,
+}: {
+  creditor: Creditor;
+  actionLabel: string;
+  actionBtnClass: string;
+  actionIcon: ReactNode;
+  onAction: (id: string) => void;
+  isEditing: boolean;
+  isSelected: boolean;
+  onSelect: (creditor: Creditor) => void;
+}) => (
+  <TableRow
+    className={`group transition-colors ${
+      isSelected
+        ? "bg-primary/5 border-l-2 border-l-primary"
+        : isEditing
+        ? "cursor-pointer hover:bg-muted/40"
+        : "hover:bg-muted/30"
+    }`}
+    onClick={() => isEditing && onSelect(creditor)}
+  >
+    {/* Checkbox — edit mode only */}
+    {isEditing && (
+      <TableCell className="px-2 py-1.5 w-8" onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={() => onSelect(creditor)}
+          className="h-4 w-4"
+        />
+      </TableCell>
+    )}
+
+    {/* +/- action button */}
+    <TableCell className="px-2 py-1.5 w-8" onClick={(e) => { e.stopPropagation(); onAction(creditor.id); }}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button className={`h-6 w-6 rounded-full flex items-center justify-center transition-colors ${actionBtnClass}`}>
+            {actionIcon}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">
+          {actionLabel}
+        </TooltipContent>
+      </Tooltip>
+    </TableCell>
+
+    {/* Creditor Name */}
+    <TableCell className="px-2 py-1.5 max-w-[100px]">
+      <span className="block truncate text-[11px] font-medium text-primary" title={creditor.name}>
+        {creditor.name}
+      </span>
+    </TableCell>
+
+    {/* Debt Type */}
+    <TableCell className="px-2 py-1.5">
+      <Badge variant="outline" className="text-[9px] px-1 py-0 font-normal whitespace-nowrap border-muted-foreground/30">
+        {creditor.debtType.replace(/_/g, "\u00A0")}
+      </Badge>
+    </TableCell>
+
+    {/* Account No. */}
+    <TableCell className="px-2 py-1.5 max-w-[90px]">
+      <span className="block truncate text-[11px] text-muted-foreground" title={creditor.accountNumber}>
+        {creditor.accountNumber}
+      </span>
+    </TableCell>
+
+    {/* Open Date */}
+    <TableCell className="px-2 py-1.5">
+      <span className="text-[11px] text-muted-foreground whitespace-nowrap">{creditor.openDate}</span>
+    </TableCell>
+
+    {/* Sanctioned */}
+    <TableCell className="px-2 py-1.5 text-right">
+      <span className="text-[11px] whitespace-nowrap">{fmt(creditor.sanctionedAmount)}</span>
+    </TableCell>
+
+    {/* Balance */}
+    <TableCell className="px-2 py-1.5 text-right">
+      <span className="text-[11px] whitespace-nowrap">{fmt(creditor.currentBalance)}</span>
+    </TableCell>
+
+    {/* EMI */}
+    <TableCell className="px-2 py-1.5 text-right">
+      <span className="text-[11px] whitespace-nowrap font-medium">
+        {creditor.emi > 0 ? fmt(creditor.emi) : "—"}
+      </span>
+    </TableCell>
+  </TableRow>
+);
+
+/* ── Creditor edit panel — rendered inside RightPanel ── */
+interface CreditorEditPanelProps {
+  initialDraft: Creditor;
+  onSave: (draft: Creditor) => void;
+  onClose: () => void;
 }
 
-const CreditorCalculatorTab = ({ isEditing = false }: CreditorCalculatorTabProps) => {
+const CreditorEditPanel = ({ initialDraft, onSave, onClose }: CreditorEditPanelProps) => {
+  const [draft, setDraft] = useState<Creditor>(initialDraft);
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+        <h3 className="text-sm font-semibold">Edit Creditor</h3>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Form */}
+      <div className="p-4 space-y-3 overflow-y-auto flex-1">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Creditor Name</Label>
+          <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Account Number</Label>
+          <Input value={draft.accountNumber} onChange={(e) => setDraft({ ...draft, accountNumber: e.target.value })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Type of Debt</Label>
+          <Select value={draft.debtType} onValueChange={(v) => setDraft({ ...draft, debtType: v })}>
+            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {DEBT_TYPES.map((t) => (
+                <SelectItem key={t} value={t} className="text-xs">{t.replace(/_/g, " ")}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Open Date</Label>
+          <Input value={draft.openDate} onChange={(e) => setDraft({ ...draft, openDate: e.target.value })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Sanctioned Limit</Label>
+          <Input type="number" value={draft.sanctionedAmount} onChange={(e) => setDraft({ ...draft, sanctionedAmount: Number(e.target.value) })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Current Balance</Label>
+          <Input type="number" value={draft.currentBalance} onChange={(e) => setDraft({ ...draft, currentBalance: Number(e.target.value) })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Closure Amount</Label>
+          <Input type="number" value={draft.closureAmount} onChange={(e) => setDraft({ ...draft, closureAmount: Number(e.target.value) })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Total Tenure</Label>
+          <Input type="number" value={draft.tenure} onChange={(e) => setDraft({ ...draft, tenure: Number(e.target.value) })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Rate of Interest</Label>
+          <Input value={draft.currentROI} onChange={(e) => setDraft({ ...draft, currentROI: e.target.value })} className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">EMI</Label>
+          <Input type="number" value={draft.emi} onChange={(e) => setDraft({ ...draft, emi: Number(e.target.value) })} className="h-8 text-sm" />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-3 border-t shrink-0">
+        <Button className="w-full h-9 text-sm" onClick={() => onSave(draft)}>
+          Save Creditor
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+interface CreditorCalculatorTabProps {
+  isEditing?: boolean;
+  onSetEditPanel?: (content: ReactNode | null) => void;
+}
+
+const CreditorCalculatorTab = ({ isEditing = false, onSetEditPanel }: CreditorCalculatorTabProps) => {
   const [included, setIncluded] = useState(initialIncluded);
   const [excluded, setExcluded] = useState(initialExcluded);
 
@@ -253,8 +271,51 @@ const CreditorCalculatorTab = ({ isEditing = false }: CreditorCalculatorTabProps
   const [existingTotalEMI, setExistingTotalEMI] = useState(69942);
   const [calculated, setCalculated] = useState(true);
 
-  const income = 100000;
+  // ── Edit panel state ──────────────────────────────────────────────────────────
+  const [selectedCreditorId, setSelectedCreditorId] = useState<string | null>(null);
+  const selectedFromRef = useRef<"included" | "excluded" | null>(null);
 
+  useEffect(() => {
+    if (!isEditing) {
+      setSelectedCreditorId(null);
+      selectedFromRef.current = null;
+      onSetEditPanel?.(null);
+    }
+  }, [isEditing, onSetEditPanel]);
+
+  const closePanel = useCallback(() => {
+    setSelectedCreditorId(null);
+    selectedFromRef.current = null;
+    onSetEditPanel?.(null);
+  }, [onSetEditPanel]);
+
+  const handlePanelSave = useCallback((draft: Creditor) => {
+    if (selectedFromRef.current === "included") {
+      setIncluded((prev) => prev.map((c) => (c.id === draft.id ? draft : c)));
+    } else {
+      setExcluded((prev) => prev.map((c) => (c.id === draft.id ? draft : c)));
+    }
+    closePanel();
+  }, [closePanel]);
+
+  const handleSelectCreditor = (creditor: Creditor, from: "included" | "excluded") => {
+    if (selectedCreditorId === creditor.id) {
+      closePanel();
+    } else {
+      setSelectedCreditorId(creditor.id);
+      selectedFromRef.current = from;
+      onSetEditPanel?.(
+        <CreditorEditPanel
+          key={creditor.id}
+          initialDraft={creditor}
+          onSave={handlePanelSave}
+          onClose={closePanel}
+        />
+      );
+    }
+  };
+
+  const income = 100000;
   const totalSanctioned = included.reduce((s, c) => s + c.sanctionedAmount, 0);
   const totalCurrentBalance = included.reduce((s, c) => s + c.currentBalance, 0);
   const totalEMI = included.reduce((s, c) => s + c.emi, 0);
@@ -263,28 +324,22 @@ const CreditorCalculatorTab = ({ isEditing = false }: CreditorCalculatorTabProps
   const handleExclude = (id: string) => {
     const creditor = included.find((c) => c.id === id);
     if (creditor) {
-      setIncluded(included.filter((c) => c.id !== id));
-      setExcluded([...excluded, creditor]);
+      setIncluded((prev) => prev.filter((c) => c.id !== id));
+      setExcluded((prev) => [...prev, creditor]);
+      if (selectedCreditorId === id) closePanel();
     }
   };
 
   const handleInclude = (id: string) => {
     const creditor = excluded.find((c) => c.id === id);
     if (creditor) {
-      setExcluded(excluded.filter((c) => c.id !== id));
-      setIncluded([...included, creditor]);
+      setExcluded((prev) => prev.filter((c) => c.id !== id));
+      setIncluded((prev) => [...prev, creditor]);
+      if (selectedCreditorId === id) closePanel();
     }
   };
 
-  const updateIncluded = (id: string, field: keyof Creditor, value: string | number) => {
-    setIncluded(included.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
-  };
-
-  const updateExcluded = (id: string, field: keyof Creditor, value: string | number) => {
-    setExcluded(excluded.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
-  };
-
-  // Calculator logic
+  // ── Calculator ────────────────────────────────────────────────────────────────
   const monthlyRate = rateOfInterest / 100 / 12;
   const tenureMonths = parseInt(tenure);
   const loanEMI =
@@ -304,40 +359,22 @@ const CreditorCalculatorTab = ({ isEditing = false }: CreditorCalculatorTabProps
   const newTotalObligation = Math.round(loanEMI) + excluded.reduce((s, c) => s + c.emi, 0);
   const postFOIR = income > 0 ? (newTotalObligation / income) * 100 : 0;
 
+  const totalsColSpan = isEditing ? 6 : 5;
+
   return (
     <div className="space-y-5">
       {/* ── Header strip ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-foreground">Creditors</h2>
-          <div className="h-4 w-px bg-border" />
-          <Badge variant="outline" className="text-xs font-normal">
-            Total Debt — {fmt(totalDebt)}
+      <div className="flex items-center gap-3 flex-wrap">
+        <h2 className="text-sm font-semibold text-foreground">Creditors</h2>
+        <div className="h-4 w-px bg-border" />
+        <Badge variant="outline" className="text-xs font-normal">
+          Total Debt — {fmt(totalDebt)}
+        </Badge>
+        {isEditing && (
+          <Badge className="text-[10px] bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-100">
+            Select a creditor row to edit its details
           </Badge>
-          {isEditing && (
-            <Badge className="text-[10px] bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-100">
-              Editing mode — make your changes, then click Save in Actions
-            </Badge>
-          )}
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1 text-xs h-7">
-              Actions <ChevronDown className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="gap-2 text-sm">
-              <FileSpreadsheet className="h-4 w-4" /> Download Excel
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 text-sm">
-              <Columns className="h-4 w-4" /> Show &amp; Hide
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 text-sm">
-              <Group className="h-4 w-4" /> Group By
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        )}
       </div>
 
       {/* ── Side-by-side creditor tables ── */}
@@ -355,30 +392,31 @@ const CreditorCalculatorTab = ({ isEditing = false }: CreditorCalculatorTabProps
           </div>
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader><TableColumns /></TableHeader>
+              <TableHeader><TableColumns isEditing={isEditing} /></TableHeader>
               <TableBody>
                 {included.map((c) => (
                   <CreditorRow
                     key={c.id}
                     creditor={c}
-                    actionIcon={<Minus className="h-2.5 w-2.5" />}
-                    actionLabel="Move to Excluded"
-                    actionClass="border-red-300 text-red-500 hover:bg-red-50 hover:border-red-500"
+                    actionLabel="Exclude creditor"
+                    actionBtnClass="bg-orange-500 hover:bg-orange-600 text-white"
+                    actionIcon={<Minus className="h-3 w-3" />}
                     onAction={handleExclude}
                     isEditing={isEditing}
-                    onUpdate={updateIncluded}
+                    isSelected={selectedCreditorId === c.id}
+                    onSelect={(cred) => handleSelectCreditor(cred, "included")}
                   />
                 ))}
                 {included.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-6 text-xs text-muted-foreground">
+                    <TableCell colSpan={isEditing ? 9 : 8} className="text-center py-6 text-xs text-muted-foreground">
                       No included creditors
                     </TableCell>
                   </TableRow>
                 )}
                 {included.length > 0 && (
                   <TableRow className="bg-muted/40 border-t-2 border-muted">
-                    <TableCell colSpan={5} className="px-2 py-1.5 text-[10px] text-muted-foreground font-semibold">
+                    <TableCell colSpan={totalsColSpan} className="px-2 py-1.5 text-[10px] text-muted-foreground font-semibold">
                       Totals
                     </TableCell>
                     <TableCell className="px-2 py-1.5 text-[11px] text-right font-semibold whitespace-nowrap">
@@ -410,23 +448,24 @@ const CreditorCalculatorTab = ({ isEditing = false }: CreditorCalculatorTabProps
           </div>
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader><TableColumns /></TableHeader>
+              <TableHeader><TableColumns isEditing={isEditing} /></TableHeader>
               <TableBody>
                 {excluded.map((c) => (
                   <CreditorRow
                     key={c.id}
                     creditor={c}
-                    actionIcon={<Plus className="h-2.5 w-2.5" />}
-                    actionLabel="Move to Included"
-                    actionClass="border-green-400 text-green-600 hover:bg-green-50 hover:border-green-600"
+                    actionLabel="Include creditor"
+                    actionBtnClass="bg-[#1e3a5f] hover:bg-[#152d4a] text-white"
+                    actionIcon={<Plus className="h-3 w-3" />}
                     onAction={handleInclude}
                     isEditing={isEditing}
-                    onUpdate={updateExcluded}
+                    isSelected={selectedCreditorId === c.id}
+                    onSelect={(cred) => handleSelectCreditor(cred, "excluded")}
                   />
                 ))}
                 {excluded.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-6 text-xs text-muted-foreground">
+                    <TableCell colSpan={isEditing ? 9 : 8} className="text-center py-6 text-xs text-muted-foreground">
                       No excluded creditors
                     </TableCell>
                   </TableRow>

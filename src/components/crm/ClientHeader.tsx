@@ -2,11 +2,34 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, CreditCard, FileText, Users, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 
+/* Maps both legacy stage strings and the dynamic scrub-derived client stages */
 const stageStyles: Record<string, string> = {
+  // Legacy
   Lead: "bg-secondary text-secondary-foreground",
-  Qualified: "bg-[hsl(var(--stage-qualified-bg))] text-[hsl(var(--stage-qualified))]",
-  "Login Done": "bg-[hsl(var(--status-eligible-bg))] text-[hsl(var(--status-eligible-foreground))]",
-  "Scrub Done": "bg-[hsl(var(--stage-scrub-done-bg))] text-[hsl(var(--stage-scrub-done))]",
+  Qualified:
+    "bg-[hsl(var(--stage-qualified-bg))] text-[hsl(var(--stage-qualified))]",
+  "Login Done":
+    "bg-[hsl(var(--status-eligible-bg))] text-[hsl(var(--status-eligible-foreground))]",
+  "Scrub Done":
+    "bg-[hsl(var(--stage-scrub-done-bg))] text-[hsl(var(--stage-scrub-done))]",
+
+  // Base / pre-scrub
+  DCP_AGREEMENT_SIGNED:
+    "bg-blue-50 text-blue-700 border-blue-200",
+
+  // Scrub-derived (from SCRUB_STATUS_CONFIG.clientStage)
+  "Scrub Requested":
+    "bg-amber-50 text-amber-700 border-amber-300",
+  "Scrub Approved":
+    "bg-green-50 text-green-700 border-green-300",
+  "Scrub Rejected":
+    "bg-red-50 text-red-700 border-red-300",
+  "Under Review – Rep Pending":
+    "bg-orange-50 text-orange-700 border-orange-300",
+  "Under Review – Credit Pending":
+    "bg-blue-50 text-blue-700 border-blue-300",
+  Invalid:
+    "bg-gray-100 text-gray-600 border-gray-300",
 };
 
 interface ClientHeaderProps {
@@ -18,7 +41,13 @@ interface ClientHeaderProps {
   onCheckLenderMatch: () => void;
 }
 
-const CopyableText = ({ text, className = "" }: { text: string; className?: string }) => {
+const CopyableText = ({
+  text,
+  className = "",
+}: {
+  text: string;
+  className?: string;
+}) => {
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard");
@@ -27,7 +56,10 @@ const CopyableText = ({ text, className = "" }: { text: string; className?: stri
   return (
     <span className={`inline-flex items-center gap-1.5 ${className}`}>
       <span>{text}</span>
-      <button onClick={handleCopy} className="text-muted-foreground hover:text-foreground transition-colors">
+      <button
+        onClick={handleCopy}
+        className="text-muted-foreground hover:text-foreground transition-colors"
+      >
         <Copy className="h-3 w-3" />
       </button>
     </span>
@@ -41,14 +73,31 @@ const ClientHeader = ({
   phone = "77210 69734",
   channel = "DCP",
 }: ClientHeaderProps) => {
+  const stageCls = stageStyles[stage] ?? stageStyles.Lead;
+
+  /* Format the stage label — convert DCP_AGREEMENT_SIGNED → DCP Agreement Signed */
+  const stageLabel =
+    stage === "DCP_AGREEMENT_SIGNED"
+      ? "DCP Agreement Signed"
+      : stage;
+
   return (
     <div className="sticky top-0 z-30 bg-card border-b shadow-sm">
       <div className="px-6 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <CopyableText text={clientId} className="text-sm font-medium text-primary" />
-            <CopyableText text={clientName} className="text-sm font-semibold text-foreground" />
-            <CopyableText text={phone} className="text-sm text-foreground" />
+            <CopyableText
+              text={clientId}
+              className="text-sm font-medium text-primary"
+            />
+            <CopyableText
+              text={clientName}
+              className="text-sm font-semibold text-foreground"
+            />
+            <CopyableText
+              text={phone}
+              className="text-sm text-foreground"
+            />
             <div className="flex items-center gap-2 text-muted-foreground">
               <CreditCard className="h-4 w-4" />
               <FileText className="h-4 w-4" />
@@ -57,9 +106,17 @@ const ClientHeader = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs font-medium">{channel}</Badge>
-            <Badge variant="outline" className={`text-xs font-medium ${stageStyles[stage] || stageStyles.Lead}`}>
-              {stage}
+            <Badge
+              variant="outline"
+              className="text-xs font-medium"
+            >
+              {channel}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`text-xs font-medium ${stageCls}`}
+            >
+              {stageLabel}
             </Badge>
           </div>
         </div>

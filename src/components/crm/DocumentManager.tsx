@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -26,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Pencil } from "lucide-react";
+import { Upload, X } from "lucide-react";
 
 const documentTypes = [
   "Income Proof - Salary Slip",
@@ -57,27 +58,146 @@ const initialDocs: Document[] = [
   { id: "6", name: "Form 16 - FY 2023-24", type: "Income Proof - Form 16", dateRange: "FY 2023-24", comment: "", usedForLogin: false, archived: false },
 ];
 
-interface DocumentManagerProps {
-  isEditing?: boolean;
+/* ── Document edit panel — rendered inside RightPanel ── */
+interface DocumentEditPanelProps {
+  initialDraft: Document;
+  onSave: (draft: Document) => void;
+  onClose: () => void;
 }
 
-const DocumentManager = ({ isEditing = false }: DocumentManagerProps) => {
+const DocumentEditPanel = ({ initialDraft, onSave, onClose }: DocumentEditPanelProps) => {
+  const [draft, setDraft] = useState<Document>(initialDraft);
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+        <h3 className="text-sm font-semibold">Edit Document</h3>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Form */}
+      <div className="p-4 space-y-3 overflow-y-auto flex-1">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Document Name</Label>
+          <Input
+            value={draft.name}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            className="h-8 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Document Type</Label>
+          <Select
+            value={draft.type}
+            onValueChange={(v) => setDraft({ ...draft, type: v })}
+          >
+            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {documentTypes.map((type) => (
+                <SelectItem key={type} value={type} className="text-xs">{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Date Range</Label>
+          <Input
+            value={draft.dateRange}
+            onChange={(e) => setDraft({ ...draft, dateRange: e.target.value })}
+            placeholder="e.g. Jan 2024"
+            className="h-8 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Comment</Label>
+          <Textarea
+            value={draft.comment}
+            onChange={(e) => setDraft({ ...draft, comment: e.target.value })}
+            placeholder="Add a note..."
+            className="text-sm resize-none"
+            rows={3}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Used for Login</Label>
+          <Select
+            value={draft.usedForLogin ? "yes" : "no"}
+            onValueChange={(v) => setDraft({ ...draft, usedForLogin: v === "yes" })}
+          >
+            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="yes">Yes</SelectItem>
+              <SelectItem value="no">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-3 border-t shrink-0">
+        <Button className="w-full h-9 text-sm" onClick={() => onSave(draft)}>
+          Save Document
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+interface DocumentManagerProps {
+  isEditing?: boolean;
+  onSetEditPanel?: (content: ReactNode | null) => void;
+}
+
+const DocumentManager = ({ isEditing = false, onSetEditPanel }: DocumentManagerProps) => {
   const [docs, setDocs] = useState<Document[]>(initialDocs);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 
-  const updateDoc = (id: string, field: keyof Document, value: string | boolean) => {
-    setDocs(docs.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
+  useEffect(() => {
+    if (!isEditing) {
+      setSelectedDocId(null);
+      onSetEditPanel?.(null);
+    }
+  }, [isEditing, onSetEditPanel]);
+
+  const closePanel = useCallback(() => {
+    setSelectedDocId(null);
+    onSetEditPanel?.(null);
+  }, [onSetEditPanel]);
+
+  const handlePanelSave = useCallback((draft: Document) => {
+    setDocs((prev) => prev.map((d) => (d.id === draft.id ? draft : d)));
+    closePanel();
+  }, [closePanel]);
+
+  const handleSelectDoc = (doc: Document) => {
+    if (selectedDocId === doc.id) {
+      closePanel();
+    } else {
+      setSelectedDocId(doc.id);
+      onSetEditPanel?.(
+        <DocumentEditPanel
+          key={doc.id}
+          initialDraft={doc}
+          onSave={handlePanelSave}
+          onClose={closePanel}
+        />
+      );
+    }
   };
 
   return (
-    <div className={`bg-card rounded-lg border transition-all duration-200 ${isEditing ? "border-amber-300 ring-1 ring-amber-200" : ""}`}>
-      <div className="flex items-center justify-between px-5 py-4">
+    <div className={`border rounded-lg bg-card transition-all duration-200 ${isEditing ? "border-amber-300 ring-1 ring-amber-200" : ""}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-foreground">Document Manager</h3>
           {isEditing && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-400 text-amber-700 bg-amber-50 gap-1">
-              <Pencil className="h-2.5 w-2.5" />
-              Editing
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-400 text-amber-700 bg-amber-50">
+              Select a document to edit
             </Badge>
           )}
         </div>
@@ -127,93 +247,74 @@ const DocumentManager = ({ isEditing = false }: DocumentManagerProps) => {
         </Dialog>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="text-xs">Document Name</TableHead>
-            <TableHead className="text-xs">Type</TableHead>
-            <TableHead className="text-xs">Date Range</TableHead>
-            <TableHead className="text-xs">Comment</TableHead>
-            <TableHead className="text-xs text-center">Used for Login</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {docs.filter((d) => !d.archived).map((doc) => (
-            <TableRow key={doc.id} className={isEditing ? "bg-amber-50/30" : ""}>
-              {/* Document Name */}
-              <TableCell>
-                {isEditing ? (
-                  <Input
-                    value={doc.name}
-                    onChange={(e) => updateDoc(doc.id, "name", e.target.value)}
-                    className="h-7 text-sm w-48 py-0 px-2"
-                  />
-                ) : (
-                  <span className="text-sm font-medium">{doc.name}</span>
-                )}
-              </TableCell>
-
-              {/* Type — always a Select */}
-              <TableCell>
-                <Select value={doc.type} onValueChange={(v) => updateDoc(doc.id, "type", v)}>
-                  <SelectTrigger className={`h-7 text-xs border-0 bg-transparent p-0 pl-1 focus:ring-0 w-auto min-w-[180px] ${isEditing ? "border border-input rounded-md bg-background px-2" : ""}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {documentTypes.map((type) => (
-                      <SelectItem key={type} value={type} className="text-sm">{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </TableCell>
-
-              {/* Date Range */}
-              <TableCell>
-                {isEditing ? (
-                  <Input
-                    value={doc.dateRange}
-                    onChange={(e) => updateDoc(doc.id, "dateRange", e.target.value)}
-                    placeholder="e.g. Jan 2024"
-                    className="h-7 text-sm w-36 py-0 px-2"
-                  />
-                ) : (
-                  <span className="text-sm text-muted-foreground">{doc.dateRange || "—"}</span>
-                )}
-              </TableCell>
-
-              {/* Comment */}
-              <TableCell>
-                {isEditing ? (
-                  <Input
-                    value={doc.comment}
-                    onChange={(e) => updateDoc(doc.id, "comment", e.target.value)}
-                    placeholder="Add comment"
-                    className="h-7 text-sm w-40 py-0 px-2"
-                  />
-                ) : (
-                  <span className="text-sm text-muted-foreground">{doc.comment || "—"}</span>
-                )}
-              </TableCell>
-
-              {/* Used for Login — always a Select */}
-              <TableCell className="text-center">
-                <Select
-                  value={doc.usedForLogin ? "yes" : "no"}
-                  onValueChange={(v) => updateDoc(doc.id, "usedForLogin", v === "yes")}
-                >
-                  <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 pl-1 focus:ring-0 w-auto min-w-[60px] mx-auto">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              {isEditing && <TableHead className="w-8 px-3" />}
+              <TableHead className="text-xs">Document Name</TableHead>
+              <TableHead className="text-xs">Type</TableHead>
+              <TableHead className="text-xs">Date Range</TableHead>
+              <TableHead className="text-xs">Comment</TableHead>
+              <TableHead className="text-xs text-center">Used for Login</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {docs.filter((d) => !d.archived).map((doc) => (
+              <TableRow
+                key={doc.id}
+                className={`transition-colors ${
+                  selectedDocId === doc.id
+                    ? "bg-primary/5 border-l-2 border-l-primary"
+                    : isEditing
+                    ? "cursor-pointer hover:bg-muted/40"
+                    : ""
+                }`}
+                onClick={() => isEditing && handleSelectDoc(doc)}
+              >
+                {/* Checkbox — edit mode only */}
+                {isEditing && (
+                  <TableCell className="px-3 py-2 w-8" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedDocId === doc.id}
+                      onCheckedChange={() => handleSelectDoc(doc)}
+                      className="h-4 w-4"
+                    />
+                  </TableCell>
+                )}
+
+                {/* Document Name */}
+                <TableCell>
+                  <span className="text-sm font-medium">{doc.name}</span>
+                </TableCell>
+
+                {/* Type */}
+                <TableCell>
+                  <span className="text-xs text-muted-foreground">{doc.type}</span>
+                </TableCell>
+
+                {/* Date Range */}
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">{doc.dateRange || "—"}</span>
+                </TableCell>
+
+                {/* Comment */}
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">{doc.comment || "—"}</span>
+                </TableCell>
+
+                {/* Used for Login */}
+                <TableCell className="text-center">
+                  <Badge variant={doc.usedForLogin ? "default" : "outline"} className="text-[10px] px-1.5">
+                    {doc.usedForLogin ? "Yes" : "No"}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
