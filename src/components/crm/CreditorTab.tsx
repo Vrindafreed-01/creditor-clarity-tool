@@ -73,7 +73,7 @@ const CreditorEditPanel = ({ initialDraft, onSave, onClose }: CreditorEditPanelP
           <Input type="number" value={draft.currentBalance} onChange={(e) => setDraft({ ...draft, currentBalance: Number(e.target.value) })} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Closure Amount</Label>
+          <Label className="text-xs text-muted-foreground">Total Outstanding Loan</Label>
           <Input type="number" value={draft.closureAmount} onChange={(e) => setDraft({ ...draft, closureAmount: Number(e.target.value) })} className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
@@ -217,7 +217,7 @@ const CreditorTab = ({
                 <TH>Account Number</TH>
                 <TH>Open Date</TH>
                 <TH right>Sanctioned Limited</TH>
-                <TH right>Closure Amount</TH>
+                <TH right>Total Outstanding Loan</TH>
                 <TH right>EMI</TH>
                 <TH right>Tenure total</TH>
                 <TH right>Current ROI</TH>
@@ -338,7 +338,7 @@ const CreditorTab = ({
                 <TH>Account Number</TH>
                 <TH>Open Date</TH>
                 <TH right>Sanctioned Limited</TH>
-                <TH right>Closure Amount</TH>
+                <TH right>Total Outstanding Loan</TH>
                 <TH right>EMI</TH>
                 <TH right>Tenure total</TH>
                 <TH right>Current ROI</TH>

@@ -11,7 +11,7 @@ interface ServiceabilityListModalProps {
   prefillSearch?: string;
 }
 
-const serviceabilityData = [
+export const serviceabilityData = [
   { city: "HYDERABAD", state: "TS", afl: "Metro", pfl: "South", abcl: "A", tata: "Yes", piramal: "Yes", idfc: "Yes", lnt: "Yes" },
   { city: "KOLKATA", state: "WB", afl: "Metro", pfl: "East", abcl: "A", tata: "Yes", piramal: "Yes", idfc: "Yes", lnt: "Yes" },
   { city: "AHMEDABAD", state: "GJ", afl: "Metro", pfl: "West", abcl: "A", tata: "Yes", piramal: "Yes", idfc: "Yes", lnt: "Yes" },

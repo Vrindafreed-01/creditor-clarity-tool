@@ -11,7 +11,7 @@ interface EmployerListModalProps {
   prefillSearch?: string;
 }
 
-const employerData = [
+export const employerData = [
   { name: "AARTI DRUGS LIMITED", afl: "CAT C", pfl: "NOT LISTED", abcl: "", tata: "Category C", idfc: "CAT C", lnt: "CAT D", icici: "Open Market" },
   { name: "ACER INDIA PRIVATE LIMITED", afl: "CAT C", pfl: "NOT LISTED", abcl: "", tata: "Category A", idfc: "CAT C", lnt: "CAT C", icici: "Open Market" },
   { name: "ADANI GAS LIMITED", afl: "CAT B", pfl: "CAT C", abcl: "", tata: "Category B", idfc: "CAT C", lnt: "CAT D", icici: "Open Market" },

@@ -191,7 +191,7 @@ const CalculatorTab = ({
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30">Creditor Name</TableHead>
                 <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30">Debt Type</TableHead>
-                <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30 text-right">Closure Amount</TableHead>
+                <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30 text-right">Total Outstanding Loan</TableHead>
                 <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30 text-right">EMI</TableHead>
                 <TableHead className="w-10 bg-muted/30" />
               </TableRow>
@@ -338,7 +338,7 @@ const CalculatorTab = ({
                 <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30">Creditor Name</TableHead>
                 <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30">STC</TableHead>
                 <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30">Debt Type</TableHead>
-                <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30 text-right">Closure Amount</TableHead>
+                <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30 text-right">Total Outstanding Loan</TableHead>
                 <TableHead className="px-3 py-2 text-[10px] font-semibold bg-muted/30 text-right">EMI</TableHead>
                 <TableHead className="w-10 bg-muted/30" />
               </TableRow>

@@ -32,7 +32,7 @@ export const INITIAL_INCLUDED: Creditor[] = [
 
 export const INITIAL_EXCLUDED: Creditor[] = [
   { id: "e1", name: "HDFC BANK LTD", debtType: "CREDIT_CARD", accountNumber: "XXXXXXXXXXXXXXX9181", openDate: "28 Sep 23", sanctionedAmount: 208530, currentBalance: 198834, closureAmount: 198834, tenure: 0, currentROI: "--", emi: 9942 },
-  { id: "e2", name: "Responce Investments Limited", debtType: "PERSONAL_LOAN", accountNumber: "123456", openDate: "2 Oct 26", sanctionedAmount: 1, currentBalance: 1, closureAmount: 1, tenure: 0, currentROI: "--", emi: 0 },
+  { id: "e2", name: "Responce Investments Limited", debtType: "PERSONAL_LOAN", accountNumber: "XXXXXXXXXX4872", openDate: "12 Mar 24", sanctionedAmount: 120000, currentBalance: 18500, closureAmount: 18500, tenure: 12, currentROI: "18.0%", emi: 1700 },
   { id: "e3", name: "SMFG India Credit Co. Ltd.", debtType: "PERSONAL_LOAN", accountNumber: "XXXXXXXXXXX3029", openDate: "7 Jul 25", sanctionedAmount: 60000, currentBalance: 32311, closureAmount: 32311, tenure: 0, currentROI: "--", emi: 7000 },
   { id: "e4", name: "Early Salary Pvt. Ltd.", debtType: "PERSONAL_LOAN", accountNumber: "XXXXXXXXXXXXX3284", openDate: "6 Nov 25", sanctionedAmount: 8000, currentBalance: 5451, closureAmount: 5451, tenure: 0, currentROI: "--", emi: 5000 },
   { id: "e5", name: "HDB Financial Services Ltd.", debtType: "PERSONAL_LOAN", accountNumber: "XXXX0586", openDate: "6 Nov 25", sanctionedAmount: 32000, currentBalance: 21801, closureAmount: 21801, tenure: 6, currentROI: "--", emi: 0 },

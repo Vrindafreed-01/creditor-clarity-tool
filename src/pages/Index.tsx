@@ -3,16 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import ClientHeader from "@/components/crm/ClientHeader";
 import LeftSidebar from "@/components/crm/LeftSidebar";
 import RightPanel from "@/components/crm/RightPanel";
-import ProfileTab from "@/components/crm/ProfileTab";
 import CreditorTab from "@/components/crm/CreditorTab";
 import CalculatorTab from "@/components/crm/CalculatorTab";
 import DocumentsTab from "@/components/crm/DocumentsTab";
@@ -21,9 +14,14 @@ import RequestDocumentsView from "@/components/crm/RequestDocumentsView";
 import AssignSalesRepView from "@/components/crm/AssignSalesRepView";
 import EmployerListModal from "@/components/crm/EmployerListModal";
 import ServiceabilityListModal from "@/components/crm/ServiceabilityListModal";
+import LenderPolicyModal from "@/components/crm/LenderPolicyModal";
 import TLScrubTasksView from "@/components/crm/TLScrubTasksView";
 import ScrubApprovalModal from "@/components/crm/ScrubApprovalModal";
-import { ChevronDown, Download, Pencil, Check, ShieldCheck, ArrowRight, X } from "lucide-react";
+import PortalPage from "@/components/crm/PortalPage";
+import DashboardTab from "@/components/crm/DashboardTab";
+import SecondaryLoginTab from "@/components/crm/SecondaryLoginTab";
+import { Download, ShieldCheck, ArrowRight } from "lucide-react";
+
 import { ScrubTask, ScrubStatus, SCRUB_STATUS_CONFIG } from "@/types/scrub";
 import { Creditor, INITIAL_INCLUDED, INITIAL_EXCLUDED } from "@/types/creditor";
 
@@ -40,127 +38,41 @@ type ActiveView =
   | "request-details"
   | "request-documents"
   | "assign-sales-rep"
-  | "tl-tasks";
-
-/* ── Stat edit panel — rendered inside RightPanel ── */
-interface StatEditPanelProps {
-  label: string;
-  initialValue: number;
-  prefix?: string;
-  onSave: (value: number) => void;
-  onClose: () => void;
-}
-
-const StatEditPanel = ({
-  label,
-  initialValue,
-  prefix,
-  onSave,
-  onClose,
-}: StatEditPanelProps) => {
-  const [value, setValue] = useState(String(initialValue));
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-        <h3 className="text-sm font-semibold">Edit {label}</h3>
-        <button
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="p-4 space-y-3 flex-1">
-        <div className="space-y-1.5">
-          <p className="text-xs text-muted-foreground font-medium">{label}</p>
-          <div className="relative">
-            {prefix && (
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
-                {prefix}
-              </span>
-            )}
-            <input
-              type="number"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              autoFocus
-              className={`h-9 w-full text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                prefix ? "pl-7 pr-3" : "px-3"
-              }`}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 py-3 border-t shrink-0">
-        <Button
-          className="w-full h-9 text-sm"
-          onClick={() => {
-            const v = parseFloat(value);
-            if (!isNaN(v)) onSave(Math.round(v));
-          }}
-        >
-          Save
-        </Button>
-      </div>
-    </div>
-  );
-};
+  | "tl-tasks"
+  | "portal";
 
 /* ── Stat box ── */
 const StatBox = ({
   label,
-  value,
+  displayValue,
   valueClass = "text-foreground",
-  isEditing = false,
-  isSelected = false,
-  onClick,
 }: {
   label: string;
-  value: string;
+  displayValue: string;
   valueClass?: string;
-  isEditing?: boolean;
-  isSelected?: boolean;
-  onClick?: () => void;
 }) => (
-  <div
-    className={`border-2 rounded-xl px-5 py-3 bg-card min-w-[160px] transition-colors ${
-      isSelected
-        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-        : isEditing
-        ? "border-primary/30 cursor-pointer hover:border-primary/60 hover:bg-primary/5"
-        : "border-border"
-    }`}
-    onClick={isEditing ? onClick : undefined}
-  >
+  <div className="border-2 rounded-xl px-5 py-3 bg-card min-w-[160px] border-border">
     <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-widest mb-1">
       {label}
     </p>
-    <p className={`text-xl font-bold leading-tight ${valueClass}`}>{value}</p>
-    {isEditing && (
-      <p className="text-[9px] text-primary/60 mt-0.5">Click to edit</p>
-    )}
+    <p className={`text-xl font-bold leading-tight ${valueClass}`}>{displayValue}</p>
   </div>
 );
 
 const Index = () => {
   const [activeView, setActiveView]         = useState<ActiveView>("main");
-  const [activeTab, setActiveTab]           = useState("profile");
+  const [activeTab, setActiveTab]           = useState("overview");
   const [employerModalOpen, setEmployerModalOpen]             = useState(false);
   const [serviceabilityModalOpen, setServiceabilityModalOpen] = useState(false);
-  const [isEditingCreditors, setIsEditingCreditors]           = useState(false);
+  const [lenderPolicyModalOpen, setLenderPolicyModalOpen]     = useState(false);
 
-  // ── Edit panel (shown in RightPanel) ──────────────────────────────────────
+  // ── Edit panel (shown in RightPanel — used by CreditorTab) ────────────────
   const [editPanelContent, setEditPanelContent] = useState<ReactNode>(null);
+
 
   // ── Editable stat box values ──────────────────────────────────────────────
   const [totalOutstanding, setTotalOutstanding] = useState(1432155);
   const [cibilScore, setCibilScore]             = useState(751);
-  const [selectedStat, setSelectedStat]         = useState<
-    "totalOutstanding" | "cibilScore" | null
-  >(null);
 
   // ── Shared creditor state (passed to both CreditorTab and CalculatorTab) ──
   const [included, setIncluded] = useState<Creditor[]>(INITIAL_INCLUDED);
@@ -174,41 +86,6 @@ const Index = () => {
       else next.add(id);
       return next;
     });
-  };
-
-  // Clear edit panel when leaving edit mode
-  useEffect(() => {
-    if (!isEditingCreditors) {
-      setSelectedStat(null);
-      setEditPanelContent(null);
-    }
-  }, [isEditingCreditors]);
-
-  // Open stat edit panel in RightPanel
-  const openStatEdit = (stat: "totalOutstanding" | "cibilScore") => {
-    const currentValue =
-      stat === "totalOutstanding" ? totalOutstanding : cibilScore;
-    setSelectedStat(stat);
-    setEditPanelContent(
-      <StatEditPanel
-        key={stat}
-        label={
-          stat === "totalOutstanding" ? "Total Outstanding" : "CIBIL Score"
-        }
-        initialValue={currentValue}
-        prefix={stat === "totalOutstanding" ? "₹" : undefined}
-        onSave={(v) => {
-          if (stat === "totalOutstanding") setTotalOutstanding(v);
-          else setCibilScore(v);
-          setSelectedStat(null);
-          setEditPanelContent(null);
-        }}
-        onClose={() => {
-          setSelectedStat(null);
-          setEditPanelContent(null);
-        }}
-      />
-    );
   };
 
   // ── Scrub state ────────────────────────────────────────────────────────────
@@ -271,14 +148,14 @@ const Index = () => {
 
   const handleScrubFileClick = (task: ScrubTask) => {
     setActiveView("main");
-    setActiveTab("profile");
+    setActiveTab("overview");
     setSelectedScrubTask(task);
     setApprovalOpen(true);
   };
 
   const handleTLViewClient = (_task: ScrubTask) => {
     setActiveView("main");
-    setActiveTab("profile");
+    setActiveTab("overview");
     setSelectedScrubTask(null);
   };
 
@@ -307,81 +184,24 @@ const Index = () => {
             onApprove={handleScrubApproval}
           />
         );
+      case "portal":
+        return <PortalPage onBack={() => setActiveView("main")} />;
       default:
         return (
           <div className="w-full px-6 pt-5 pb-8">
 
-            {/* ── Stat boxes + global actions row ── */}
+            {/* ── Stat boxes + actions row ── */}
             <div className="flex items-center gap-4 mb-5">
               <StatBox
                 label="Total Outstanding"
-                value={`₹${totalOutstanding.toLocaleString()}`}
-                isEditing={isEditingCreditors}
-                isSelected={selectedStat === "totalOutstanding"}
-                onClick={() => {
-                  if (selectedStat === "totalOutstanding") {
-                    setSelectedStat(null);
-                    setEditPanelContent(null);
-                  } else {
-                    openStatEdit("totalOutstanding");
-                  }
-                }}
+                displayValue={`₹${totalOutstanding.toLocaleString()}`}
               />
               <StatBox
                 label="CIBIL Score"
-                value={String(cibilScore)}
+                displayValue={String(cibilScore)}
                 valueClass={cibilScoreClass}
-                isEditing={isEditingCreditors}
-                isSelected={selectedStat === "cibilScore"}
-                onClick={() => {
-                  if (selectedStat === "cibilScore") {
-                    setSelectedStat(null);
-                    setEditPanelContent(null);
-                  } else {
-                    openStatEdit("cibilScore");
-                  }
-                }}
               />
-
               <div className="ml-auto flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={`gap-1.5 text-xs h-9 ${
-                        isEditingCreditors
-                          ? "border-primary text-primary bg-primary/5"
-                          : ""
-                      }`}
-                    >
-                      Actions <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem
-                      className="gap-2 text-sm cursor-pointer"
-                      onClick={() =>
-                        setIsEditingCreditors(!isEditingCreditors)
-                      }
-                    >
-                      {isEditingCreditors ? (
-                        <>
-                          <Check className="h-4 w-4 text-green-600" />
-                          <span className="text-green-700 font-medium">
-                            Save Changes
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 <Button
                   variant="outline"
                   size="sm"
@@ -442,34 +262,51 @@ const Index = () => {
                 <div className="flex justify-center mb-5">
                   <TabsList className="bg-card border h-10 p-1">
                     <TabsTrigger
-                      value="profile"
-                      className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                      value="overview"
+                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
-                      PROFILE
+                      PRE LOGIN DETAILS
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="secondary-login"
+                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
+                      POST LOGIN DETAILS
                     </TabsTrigger>
                     <TabsTrigger
                       value="creditor"
-                      className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
                       CREDITOR
                     </TabsTrigger>
                     <TabsTrigger
-                      value="calculator"
-                      className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      CALCULATOR
-                    </TabsTrigger>
-                    <TabsTrigger
                       value="documents"
-                      className="text-xs font-medium px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
                       DOCUMENTS
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="calculator"
+                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    >
+                      CALCULATOR
                     </TabsTrigger>
                   </TabsList>
                 </div>
 
-                <TabsContent value="profile">
-                  <ProfileTab onCheckLenderMatch={handleCheckLenderMatch} />
+                <TabsContent value="overview">
+                  <DashboardTab
+                    included={included}
+                    setIncluded={setIncluded}
+                    excluded={excluded}
+                    setExcluded={setExcluded}
+                    stcIds={stcIds}
+                    onToggleStc={handleToggleStc}
+                  />
+                </TabsContent>
+
+                <TabsContent value="secondary-login">
+                  <SecondaryLoginTab />
                 </TabsContent>
 
                 <TabsContent value="creditor">
@@ -478,9 +315,13 @@ const Index = () => {
                     setIncluded={setIncluded}
                     excluded={excluded}
                     setExcluded={setExcluded}
-                    isEditing={isEditingCreditors}
+                    isEditing={false}
                     onSetEditPanel={setEditPanelContent}
                   />
+                </TabsContent>
+
+                <TabsContent value="documents">
+                  <DocumentsTab />
                 </TabsContent>
 
                 <TabsContent value="calculator">
@@ -491,13 +332,6 @@ const Index = () => {
                     setExcluded={setExcluded}
                     stcIds={stcIds}
                     onToggleStc={handleToggleStc}
-                  />
-                </TabsContent>
-
-                <TabsContent value="documents">
-                  <DocumentsTab
-                    isEditing={isEditingCreditors}
-                    onSetEditPanel={setEditPanelContent}
                   />
                 </TabsContent>
               </Tabs>
@@ -517,29 +351,36 @@ const Index = () => {
           phone="77210 69734"
           channel="DCP"
           onCheckLenderMatch={handleCheckLenderMatch}
+          onPortalClick={() => setActiveView("portal")}
         />
 
-        <div className="flex flex-1 overflow-hidden">
-          <LeftSidebar
-            pendingScrubCount={pendingCount}
-            onTLTasksClick={() => setActiveView("tl-tasks")}
-          />
+        {activeView === "portal" ? (
           <main className="flex-1 overflow-y-auto">
             {renderMainContent()}
           </main>
-          <RightPanel
-            editContent={editPanelContent}
-            onRequestDetails={() => setActiveView("request-details")}
-            onRequestDocuments={() => setActiveView("request-documents")}
-            onAssignSalesRep={() => setActiveView("assign-sales-rep")}
-            onEmployerList={() => setEmployerModalOpen(true)}
-            onServiceability={() => setServiceabilityModalOpen(true)}
-            onLenderPolicy={() => {}}
-            scrubTasks={scrubTasks}
-            onRequestScrub={handleRequestScrub}
-            onScrubFileClick={handleScrubFileClick}
-          />
-        </div>
+        ) : (
+          <div className="flex flex-1 overflow-hidden">
+            <LeftSidebar
+              pendingScrubCount={pendingCount}
+              onTLTasksClick={() => setActiveView("tl-tasks")}
+            />
+            <main className="flex-1 overflow-y-auto">
+              {renderMainContent()}
+            </main>
+            <RightPanel
+              editContent={editPanelContent}
+              onRequestDetails={() => setActiveView("request-details")}
+              onRequestDocuments={() => setActiveView("request-documents")}
+              onAssignSalesRep={() => setActiveView("assign-sales-rep")}
+              onEmployerList={() => setEmployerModalOpen(true)}
+              onServiceability={() => setServiceabilityModalOpen(true)}
+              onLenderPolicy={() => setLenderPolicyModalOpen(true)}
+              scrubTasks={scrubTasks}
+              onRequestScrub={handleRequestScrub}
+              onScrubFileClick={handleScrubFileClick}
+            />
+          </div>
+        )}
 
         <EmployerListModal
           open={employerModalOpen}
@@ -548,6 +389,10 @@ const Index = () => {
         <ServiceabilityListModal
           open={serviceabilityModalOpen}
           onOpenChange={setServiceabilityModalOpen}
+        />
+        <LenderPolicyModal
+          open={lenderPolicyModalOpen}
+          onOpenChange={setLenderPolicyModalOpen}
         />
 
         <ScrubApprovalModal

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Copy, CreditCard, FileText, Users, FolderOpen } from "lucide-react";
+import { Copy, CreditCard, FileText, Users, FolderOpen, Globe } from "lucide-react";
 import { toast } from "sonner";
 
 /* Maps both legacy stage strings and the dynamic scrub-derived client stages */
@@ -39,6 +39,7 @@ interface ClientHeaderProps {
   phone?: string;
   channel?: string;
   onCheckLenderMatch: () => void;
+  onPortalClick: () => void;
 }
 
 const CopyableText = ({
@@ -72,6 +73,7 @@ const ClientHeader = ({
   stage,
   phone = "77210 69734",
   channel = "DCP",
+  onPortalClick,
 }: ClientHeaderProps) => {
   const stageCls = stageStyles[stage] ?? stageStyles.Lead;
 
@@ -106,6 +108,13 @@ const ClientHeader = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={onPortalClick}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border rounded-md px-2.5 py-1.5 transition-colors hover:bg-muted/50"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              Portal
+            </button>
             <Badge
               variant="outline"
               className="text-xs font-medium"
