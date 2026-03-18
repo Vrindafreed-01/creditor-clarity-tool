@@ -5,7 +5,8 @@ import AgreementAnalysis from "./AgreementAnalysis";
 const DocumentsTab = () => {
   return (
     <div className="space-y-5">
-      <DocumentManager />
+      {/* DocumentManager always in edit mode on the dedicated Documents tab */}
+      <DocumentManager isEditing={true} />
       <RequestDocument />
       <AgreementAnalysis />
     </div>

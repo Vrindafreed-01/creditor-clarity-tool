@@ -8,71 +8,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X } from "lucide-react";
+
+interface AddressState {
+  address: string;
+  ownershipType: string;
+}
+
+interface ResidenceDurationState {
+  yearsAtPresent: string;
+  yearsAtPermanent: string;
+}
 
 interface AddressBlockProps {
   label: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  pinCode: string;
-  onUpdate: (field: string, value: string) => void;
+  ownershipLabel: string;
+  data: AddressState;
+  onUpdate: (field: keyof AddressState, value: string) => void;
 }
 
-const AddressBlock = ({ label, address, city, state, country, pinCode, onUpdate }: AddressBlockProps) => (
-  <div className="space-y-3">
-    <div className="space-y-1.5">
+const AddressBlock = ({ label, ownershipLabel, data, onUpdate }: AddressBlockProps) => (
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="md:col-span-3 space-y-1.5">
       <Label className="crm-field-label">{label}</Label>
-      <Input value={address} onChange={(e) => onUpdate("address", e.target.value)} className="h-9 text-sm" />
+      <Input
+        value={data.address}
+        onChange={(e) => onUpdate("address", e.target.value)}
+        className="h-9 text-sm"
+        placeholder="Enter full address"
+      />
     </div>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <div className="space-y-1.5">
-        <Label className="crm-field-label">City</Label>
-        <div className="relative">
-          <Input value={city} onChange={(e) => onUpdate("city", e.target.value)} className="h-9 text-sm pr-12" />
-          {city && (
-            <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5">
-              <button onClick={() => onUpdate("city", "")} className="text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <Label className="crm-field-label">State</Label>
-        <Select value={state} onValueChange={(v) => onUpdate("state", v)}>
-          <SelectTrigger className="h-9 text-sm">
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-            <SelectItem value="Karnataka">Karnataka</SelectItem>
-            <SelectItem value="Delhi">Delhi</SelectItem>
-            <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-            <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-            <SelectItem value="Gujarat">Gujarat</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
-        <Label className="crm-field-label">Country</Label>
-        <Input value={country} onChange={(e) => onUpdate("country", e.target.value)} className="h-9 text-sm" />
-      </div>
-      <div className="space-y-1.5">
-        <Label className="crm-field-label">Pin Code</Label>
-        <Input value={pinCode} onChange={(e) => onUpdate("pinCode", e.target.value)} className="h-9 text-sm" />
-      </div>
+    <div className="space-y-1.5">
+      <Label className="crm-field-label">{ownershipLabel}</Label>
+      <Select value={data.ownershipType} onValueChange={(v) => onUpdate("ownershipType", v)}>
+        <SelectTrigger className="h-9 text-sm">
+          <SelectValue placeholder="Owned / Rented" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="owned">Owned</SelectItem>
+          <SelectItem value="rented">Rented</SelectItem>
+          <SelectItem value="parental">Parental</SelectItem>
+          <SelectItem value="company-provided">Company Provided</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   </div>
 );
 
 const AddressCard = () => {
-  const [aadhaar, setAadhaar] = useState({ address: "", city: "", state: "", country: "India", pinCode: "" });
-  const [permanent, setPermanent] = useState({ address: "", city: "", state: "", country: "India", pinCode: "" });
-  const [current, setCurrent] = useState({ address: "", city: "", state: "", country: "India", pinCode: "" });
-  const [housingType, setHousingType] = useState("");
+  const [aadhaar, setAadhaar] = useState<AddressState>({ address: "", ownershipType: "" });
+  const [permanent, setPermanent] = useState<AddressState>({ address: "", ownershipType: "" });
+  const [current, setCurrent] = useState<AddressState>({ address: "", ownershipType: "" });
+  const [duration, setDuration] = useState<ResidenceDurationState>({ yearsAtPresent: "", yearsAtPermanent: "" });
 
   return (
     <div className="bg-card rounded-lg border p-5">
@@ -80,66 +66,40 @@ const AddressCard = () => {
       <div className="space-y-5">
         <AddressBlock
           label="Aadhaar Address"
-          {...aadhaar}
-          onUpdate={(field, value) => setAadhaar({ ...aadhaar, [field]: value })}
+          ownershipLabel="Aadhaar Address (Owned / Rented)"
+          data={aadhaar}
+          onUpdate={(field, value) => setAadhaar((prev) => ({ ...prev, [field]: value }))}
         />
         <AddressBlock
           label="Permanent Address"
-          {...permanent}
-          onUpdate={(field, value) => setPermanent({ ...permanent, [field]: value })}
+          ownershipLabel="Permanent Address (Owned / Rented)"
+          data={permanent}
+          onUpdate={(field, value) => setPermanent((prev) => ({ ...prev, [field]: value }))}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AddressBlock
+          label="Current Address"
+          ownershipLabel="Current Address (Owned / Rented)"
+          data={current}
+          onUpdate={(field, value) => setCurrent((prev) => ({ ...prev, [field]: value }))}
+        />
+        <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <Label className="crm-field-label">Current Address</Label>
+            <Label className="crm-field-label">Total Years at Present Address</Label>
             <Input
-              value={current.address}
-              onChange={(e) => setCurrent({ ...current, address: e.target.value })}
+              value={duration.yearsAtPresent}
+              onChange={(e) => setDuration((prev) => ({ ...prev, yearsAtPresent: e.target.value }))}
               className="h-9 text-sm"
+              placeholder="e.g. 3"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="crm-field-label">Housing Type</Label>
+            <Label className="crm-field-label">Total Years at Permanent Address</Label>
             <Input
-              value={housingType}
-              onChange={(e) => setHousingType(e.target.value)}
+              value={duration.yearsAtPermanent}
+              onChange={(e) => setDuration((prev) => ({ ...prev, yearsAtPermanent: e.target.value }))}
               className="h-9 text-sm"
+              placeholder="e.g. 10"
             />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="space-y-1.5">
-            <Label className="crm-field-label">City</Label>
-            <div className="relative">
-              <Input value={current.city} onChange={(e) => setCurrent({ ...current, city: e.target.value })} className="h-9 text-sm pr-12" />
-              {current.city && (
-                <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5">
-                  <button onClick={() => setCurrent({ ...current, city: "" })} className="text-muted-foreground hover:text-foreground">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="crm-field-label">State</Label>
-            <Select value={current.state} onValueChange={(v) => setCurrent({ ...current, state: v })}>
-              <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                <SelectItem value="Karnataka">Karnataka</SelectItem>
-                <SelectItem value="Delhi">Delhi</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="crm-field-label">Country</Label>
-            <Input value={current.country} onChange={(e) => setCurrent({ ...current, country: e.target.value })} className="h-9 text-sm" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="crm-field-label">Pin Code</Label>
-            <Input value={current.pinCode} onChange={(e) => setCurrent({ ...current, pinCode: e.target.value })} className="h-9 text-sm" />
           </div>
         </div>
       </div>

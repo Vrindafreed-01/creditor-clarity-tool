@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
@@ -11,7 +11,7 @@ interface EmployerListModalProps {
   prefillSearch?: string;
 }
 
-const employerData = [
+export const employerData = [
   { name: "AARTI DRUGS LIMITED", afl: "CAT C", pfl: "NOT LISTED", abcl: "", tata: "Category C", idfc: "CAT C", lnt: "CAT D", icici: "Open Market" },
   { name: "ACER INDIA PRIVATE LIMITED", afl: "CAT C", pfl: "NOT LISTED", abcl: "", tata: "Category A", idfc: "CAT C", lnt: "CAT C", icici: "Open Market" },
   { name: "ADANI GAS LIMITED", afl: "CAT B", pfl: "CAT C", abcl: "", tata: "Category B", idfc: "CAT C", lnt: "CAT D", icici: "Open Market" },
@@ -75,21 +75,24 @@ const EmployerListModal = ({ open, onOpenChange, prefillSearch = "" }: EmployerL
   ] as const;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-base">Employer Category List</DialogTitle>
-        </DialogHeader>
-        <div className="relative mb-3">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search employer name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[680px] sm:max-w-[680px] flex flex-col p-0">
+        <SheetHeader className="px-5 py-4 border-b shrink-0">
+          <SheetTitle className="text-base">Employer Category List</SheetTitle>
+        </SheetHeader>
+        <div className="px-5 pt-4 shrink-0">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search employer name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 mb-3">{filtered.length} results</p>
         </div>
-        <div className="overflow-auto flex-1 border rounded-md">
+        <div className="overflow-auto flex-1 border-t">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -126,9 +129,8 @@ const EmployerListModal = ({ open, onOpenChange, prefillSearch = "" }: EmployerL
             </TableBody>
           </Table>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">{filtered.length} results</p>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

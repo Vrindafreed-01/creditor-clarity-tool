@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
@@ -11,7 +11,7 @@ interface ServiceabilityListModalProps {
   prefillSearch?: string;
 }
 
-const serviceabilityData = [
+export const serviceabilityData = [
   { city: "HYDERABAD", state: "TS", afl: "Metro", pfl: "South", abcl: "A", tata: "Yes", piramal: "Yes", idfc: "Yes", lnt: "Yes" },
   { city: "KOLKATA", state: "WB", afl: "Metro", pfl: "East", abcl: "A", tata: "Yes", piramal: "Yes", idfc: "Yes", lnt: "Yes" },
   { city: "AHMEDABAD", state: "GJ", afl: "Metro", pfl: "West", abcl: "A", tata: "Yes", piramal: "Yes", idfc: "Yes", lnt: "Yes" },
@@ -85,21 +85,24 @@ const ServiceabilityListModal = ({ open, onOpenChange, prefillSearch = "" }: Ser
   ] as const;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-base">Serviceability Locations</DialogTitle>
-        </DialogHeader>
-        <div className="relative mb-3">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search city or state..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[620px] sm:max-w-[620px] flex flex-col p-0">
+        <SheetHeader className="px-5 py-4 border-b shrink-0">
+          <SheetTitle className="text-base">Serviceability Locations</SheetTitle>
+        </SheetHeader>
+        <div className="px-5 pt-4 shrink-0">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search city or state..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 mb-3">{filtered.length} results</p>
         </div>
-        <div className="overflow-auto flex-1 border rounded-md">
+        <div className="overflow-auto flex-1 border-t">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -138,9 +141,8 @@ const ServiceabilityListModal = ({ open, onOpenChange, prefillSearch = "" }: Ser
             </TableBody>
           </Table>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">{filtered.length} results</p>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

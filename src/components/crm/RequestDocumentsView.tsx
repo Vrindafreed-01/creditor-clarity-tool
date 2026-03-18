@@ -1,137 +1,254 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { X, Plus, Send, ChevronLeft, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { X, ChevronDown, Check } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { CalendarDays, ChevronLeft as ChevLeft, ChevronRight as ChevRight } from "lucide-react";
+import { toast } from "sonner";
 
-const requestableDocuments = [
-  { id: "salary_slip_3m", label: "Salary Slip (Last 3 Months)" },
-  { id: "salary_slip_6m", label: "Salary Slip (Last 6 Months)" },
-  { id: "bank_stmt_6m", label: "Bank Statement (Last 6 Months)" },
-  { id: "bank_stmt_12m", label: "Bank Statement (Last 12 Months)" },
-  { id: "form16", label: "Form 16 (Latest)" },
-  { id: "itr_1yr", label: "ITR (Last 1 Year)" },
-  { id: "itr_2yr", label: "ITR (Last 2 Years)" },
-  { id: "pan_copy", label: "PAN Card Copy" },
-  { id: "aadhaar_copy", label: "Aadhaar Card Copy (Front & Back)" },
-  { id: "passport_photo", label: "Passport Size Photograph" },
-  { id: "address_proof", label: "Address Proof (Utility Bill / Rent Agreement)" },
-  { id: "emp_id", label: "Employee ID Card Copy" },
-  { id: "offer_letter", label: "Offer Letter / Appointment Letter" },
-  { id: "credit_report", label: "Credit Report (CIBIL / Experian)" },
-  { id: "existing_loan_stmt", label: "Existing Loan Statement" },
-  { id: "cc_stmt_3m", label: "Credit Card Statement (Last 3 Months)" },
-  { id: "property_docs", label: "Property Documents (if applicable)" },
-  { id: "business_proof", label: "Business Registration Proof (if self-employed)" },
+const DOC_CATEGORIES = [
+  { id: "salary_slip", label: "Salary Slip", requiresMonths: true },
+  { id: "bank_statement", label: "Bank Statement", requiresMonths: true },
+  { id: "form_16", label: "Form 16", requiresMonths: false },
+  { id: "itr", label: "ITR", requiresMonths: false },
+  { id: "pan", label: "PAN Card", requiresMonths: false },
+  { id: "aadhaar", label: "Aadhaar Card", requiresMonths: false },
+  { id: "salary_cert", label: "Salary Certificate", requiresMonths: true },
+  { id: "offer_letter", label: "Offer Letter", requiresMonths: false },
+  { id: "credit_report", label: "Credit Report", requiresMonths: false },
+  { id: "loan_statement", label: "Loan Statement", requiresMonths: true },
+  { id: "cc_statement", label: "Credit Card Statement", requiresMonths: true },
+  { id: "others", label: "Others", requiresMonths: false },
 ];
+
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const MonthPicker = ({ selected, onToggle }: { selected: string[]; onToggle: (m: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [year, setYear] = useState(new Date().getFullYear());
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" className="inline-flex items-center gap-1 h-7 rounded-md px-2 text-xs border bg-muted/40 hover:bg-muted/60 transition-colors">
+          <CalendarDays className="h-3 w-3 text-muted-foreground" />
+          {selected.length > 0 ? `${selected.length} month${selected.length > 1 ? "s" : ""} selected` : "Select months"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3 shadow-xl rounded-xl" align="start" sideOffset={4}>
+        <div className="flex items-center justify-between mb-2">
+          <button type="button" onClick={() => setYear(y => y - 1)} className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted">
+            <ChevLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-semibold">{year}</span>
+          <button type="button" onClick={() => setYear(y => y + 1)} className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted">
+            <ChevRight className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-1">
+          {MONTHS.map(m => {
+            const val = `${m} ${year}`;
+            const isSel = selected.includes(val);
+            return (
+              <button key={m} type="button" onClick={() => onToggle(val)}
+                className={`h-8 rounded-full text-xs font-medium transition-colors ${isSel ? "bg-primary text-primary-foreground" : "hover:bg-primary/10"}`}>
+                {m}
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+interface DocRequest {
+  id: string;
+  docTypeId: string;
+  docLabel: string;
+  months: string[];
+  comment: string;
+}
 
 interface RequestDocumentsViewProps {
   onClose: () => void;
+  onSent?: (reqs: Array<{docLabel: string; months: string[]; comment: string}>) => void;
 }
 
-const RequestDocumentsView = ({ onClose }: RequestDocumentsViewProps) => {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
+const RequestDocumentsView = ({ onClose, onSent }: RequestDocumentsViewProps) => {
+  // Draft state for the "add new" form
+  const [draftType, setDraftType] = useState("");
+  const [draftMonths, setDraftMonths] = useState<string[]>([]);
+  const [draftComment, setDraftComment] = useState("");
 
-  const toggle = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+  // List of items to request
+  const [requests, setRequests] = useState<DocRequest[]>([]);
+
+  const selectedCat = DOC_CATEGORIES.find(c => c.id === draftType);
+
+  const toggleMonth = (m: string) => setDraftMonths(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
+
+  const handleAddRequest = () => {
+    if (!draftType) return;
+    const cat = DOC_CATEGORIES.find(c => c.id === draftType);
+    if (!cat) return;
+    const req: DocRequest = {
+      id: Date.now().toString(),
+      docTypeId: draftType,
+      docLabel: cat.label,
+      months: [...draftMonths],
+      comment: draftComment.trim(),
+    };
+    setRequests(prev => [...prev, req]);
+    // Reset draft
+    setDraftType("");
+    setDraftMonths([]);
+    setDraftComment("");
   };
 
-  const removeItem = (id: string) => {
-    setSelected((prev) => prev.filter((i) => i !== id));
-  };
+  const removeRequest = (id: string) => setRequests(prev => prev.filter(r => r.id !== id));
 
-  const toggleAll = () => {
-    setSelected(
-      selected.length === requestableDocuments.length
-        ? []
-        : requestableDocuments.map((d) => d.id)
-    );
+  const handleSend = () => {
+    if (requests.length === 0) return;
+    toast.success(`${requests.length} document request(s) sent to client`);
+    onSent?.(requests.map(r => ({ docLabel: r.docLabel, months: r.months, comment: r.comment })));
+    onClose();
   };
 
   return (
-    <div>
-      <div className="border-b px-6 py-3">
-        <span className="text-sm text-muted-foreground">Actions</span>
-        <span className="text-sm text-muted-foreground mx-2">/</span>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-6 py-4 border-b bg-card">
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Request Documents</h2>
+          <p className="text-xs text-muted-foreground">Select document types and months to request from the client</p>
+        </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-lg font-semibold text-foreground">Request Documents</h1>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X className="h-5 w-5" />
-          </button>
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+        {/* Add new document request form */}
+        <div className="border rounded-xl p-4 bg-card space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Add Document Request</p>
+
+          {/* Document type selector */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Document Type</label>
+            <Select value={draftType} onValueChange={(v) => { setDraftType(v); setDraftMonths([]); }}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Select document type..." />
+              </SelectTrigger>
+              <SelectContent>
+                {DOC_CATEGORIES.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Month picker — only for month-based doc types */}
+          {selectedCat?.requiresMonths && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-foreground">Select Month(s)</label>
+              <div className="flex items-center gap-2 flex-wrap">
+                <MonthPicker selected={draftMonths} onToggle={toggleMonth} />
+                {draftMonths.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {draftMonths.map(m => (
+                      <Badge key={m} variant="secondary" className="text-[10px] gap-1 pl-2 pr-1">
+                        {m}
+                        <button type="button" onClick={() => toggleMonth(m)}>
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Comment field */}
+          {draftType && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-foreground">Comment <span className="text-muted-foreground font-normal">(optional, shown in brackets)</span></label>
+              <Input
+                value={draftComment}
+                onChange={(e) => setDraftComment(e.target.value)}
+                placeholder={`e.g. For HDFC account ending 2379`}
+                className="h-8 text-sm"
+              />
+            </div>
+          )}
+
+          {/* Add button */}
+          <Button
+            size="sm"
+            onClick={handleAddRequest}
+            disabled={!draftType || (selectedCat?.requiresMonths === true && draftMonths.length === 0)}
+            className="gap-1.5 text-xs h-8 w-full"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add to Request List
+          </Button>
         </div>
 
-        <div className="flex justify-center mb-6">
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <button className="flex items-center justify-between w-[380px] border rounded-md px-4 py-2.5 text-sm text-left bg-background hover:bg-muted/30 transition-colors">
-                <span className={selected.length === 0 ? "text-muted-foreground" : "text-foreground"}>
-                  {selected.length === 0
-                    ? "Select Documents to Request"
-                    : `${selected.length} document${selected.length > 1 ? "s" : ""} selected`}
-                </span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[380px] p-0" align="center">
-              <div className="flex items-center justify-between px-3 py-2 border-b">
-                <span className="text-xs text-muted-foreground">
-                  {selected.length} of {requestableDocuments.length} selected
-                </span>
-                <button onClick={toggleAll} className="text-xs text-primary hover:underline">
-                  {selected.length === requestableDocuments.length ? "Deselect All" : "Select All"}
+        {/* Pending request list */}
+        {requests.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Pending Requests ({requests.length})
+            </p>
+            {requests.map((req) => (
+              <div key={req.id} className="flex items-start gap-3 border rounded-lg px-3 py-2.5 bg-card">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground leading-none mb-1">{req.docLabel}</p>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {req.months.map(m => (
+                      <Badge key={m} variant="outline" className="text-[10px] px-1.5 py-0">{m}</Badge>
+                    ))}
+                    {req.comment && (
+                      <span className="text-xs text-muted-foreground italic">({req.comment})</span>
+                    )}
+                  </div>
+                </div>
+                <button onClick={() => removeRequest(req.id)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0 mt-0.5">
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="max-h-[300px] overflow-y-auto">
-                {requestableDocuments.map((item) => {
-                  const isSelected = selected.includes(item.id);
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => toggle(item.id)}
-                    >
-                      <span className="text-sm text-foreground">{item.label}</span>
-                      {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
-                    </div>
-                  );
-                })}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 justify-center mb-8">
-            {selected.map((id) => {
-              const item = requestableDocuments.find((d) => d.id === id);
-              return (
-                <Badge key={id} variant="secondary" className="text-xs gap-1 pr-1">
-                  {item?.label}
-                  <button onClick={() => removeItem(id)} className="hover:text-destructive transition-colors ml-1">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              );
-            })}
+            ))}
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-8 pt-4">
-          <Button variant="ghost" className="text-sm text-primary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="outline" disabled={selected.length === 0}>
-            Send Request ({selected.length})
+        {requests.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-sm">No document requests added yet.</p>
+            <p className="text-xs mt-1 text-muted-foreground/60">Use the form above to add requests.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between px-6 py-4 border-t bg-card">
+        <p className="text-xs text-muted-foreground">{requests.length} request(s) ready to send</p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" disabled={requests.length === 0} onClick={handleSend}
+            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white border-0">
+            <Send className="h-3.5 w-3.5" /> Send Request
           </Button>
         </div>
       </div>
