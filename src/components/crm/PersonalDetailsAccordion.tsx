@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,25 +7,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "lucide-react";
+import { PersonalData } from "@/types/client";
 
-const PersonalDetailsAccordion = () => {
-  const [data, setData] = useState({
-    nameAsPan: "",
-    fatherName: "",
-    motherName: "",
-    dob: "",
-    age: "",
-    aadhaar: "",
-    pan: "",
-    maritalStatus: "",
-    mobile: "",
-    personalEmail: "",
-    officialEmail: "",
-    gender: "",
-  });
+interface PersonalDetailsAccordionProps {
+  data: PersonalData;
+  onChange: (data: PersonalData) => void;
+  requestedDetailIds?: string[];
+}
 
-  const update = (key: string, value: string) => setData({ ...data, [key]: value });
+const PersonalDetailsAccordion = ({
+  data,
+  onChange,
+}: PersonalDetailsAccordionProps) => {
+  const update = (key: keyof PersonalData, value: string) =>
+    onChange({ ...data, [key]: value });
 
   return (
     <div className="bg-card rounded-lg border p-5">
@@ -37,6 +31,10 @@ const PersonalDetailsAccordion = () => {
           <Input value={data.nameAsPan} onChange={(e) => update("nameAsPan", e.target.value)} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
+          <Label className="crm-field-label">Name as per Aadhaar Card</Label>
+          <Input value={data.nameAsAadhaar} onChange={(e) => update("nameAsAadhaar", e.target.value)} className="h-9 text-sm" />
+        </div>
+        <div className="space-y-1.5">
           <Label className="crm-field-label">Father's Name</Label>
           <Input value={data.fatherName} onChange={(e) => update("fatherName", e.target.value)} className="h-9 text-sm" />
         </div>
@@ -45,56 +43,32 @@ const PersonalDetailsAccordion = () => {
           <Input value={data.motherName} onChange={(e) => update("motherName", e.target.value)} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Date of Birth</Label>
-          <div className="relative">
-            <Input value={data.dob} onChange={(e) => update("dob", e.target.value)} className="h-9 text-sm pr-8" type="date" />
-            <Calendar className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-          </div>
+          <Label className="crm-field-label">Spouse Name</Label>
+          <Input value={data.spouseName} onChange={(e) => update("spouseName", e.target.value)} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Age</Label>
-          <Input value={data.age} onChange={(e) => update("age", e.target.value)} className="h-9 text-sm" />
+          <Label className="crm-field-label">PAN No</Label>
+          <Input value={data.panNo} onChange={(e) => update("panNo", e.target.value)} className="h-9 text-sm" placeholder="ABCDE1234F" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">AADHAAR CARD NUMBER</Label>
-          <Input value={data.aadhaar} onChange={(e) => update("aadhaar", e.target.value)} className="h-9 text-sm" />
+          <Label className="crm-field-label">Aadhaar Card Number</Label>
+          <Input value={data.aadhaar} onChange={(e) => update("aadhaar", e.target.value)} className="h-9 text-sm" placeholder="XXXX XXXX XXXX" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">PAN CARD NUMBER</Label>
-          <Input value={data.pan} onChange={(e) => update("pan", e.target.value)} className="h-9 text-sm" />
+          <Label className="crm-field-label">Date of Birth (MM/DD/YYYY)</Label>
+          <Input value={data.dob} onChange={(e) => update("dob", e.target.value)} className="h-9 text-sm" type="date" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Marital Status</Label>
-          <Select value={data.maritalStatus} onValueChange={(v) => update("maritalStatus", v)}>
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="single">Single</SelectItem>
-              <SelectItem value="married">Married</SelectItem>
-              <SelectItem value="divorced">Divorced</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="crm-field-label">Mobile number</Label>
+          <Label className="crm-field-label">Mobile Number</Label>
           <Input value={data.mobile} onChange={(e) => update("mobile", e.target.value)} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">Personal Email Address</Label>
-          <Input value={data.personalEmail} onChange={(e) => update("personalEmail", e.target.value)} className="h-9 text-sm" />
+          <Input value={data.personalEmail} onChange={(e) => update("personalEmail", e.target.value)} className="h-9 text-sm" type="email" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Official Email Address</Label>
-          <Select value={data.officialEmail} onValueChange={(v) => update("officialEmail", v)}>
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="office1">Office Email 1</SelectItem>
-              <SelectItem value="office2">Office Email 2</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label className="crm-field-label">Official Email ID</Label>
+          <Input value={data.officialEmail} onChange={(e) => update("officialEmail", e.target.value)} className="h-9 text-sm" type="email" />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">Gender</Label>
@@ -106,6 +80,20 @@ const PersonalDetailsAccordion = () => {
               <SelectItem value="male">Male</SelectItem>
               <SelectItem value="female">Female</SelectItem>
               <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="crm-field-label">Marital Status</Label>
+          <Select value={data.maritalStatus} onValueChange={(v) => update("maritalStatus", v)}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="single">Single</SelectItem>
+              <SelectItem value="married">Married</SelectItem>
+              <SelectItem value="divorced">Divorced</SelectItem>
+              <SelectItem value="widowed">Widowed</SelectItem>
             </SelectContent>
           </Select>
         </div>

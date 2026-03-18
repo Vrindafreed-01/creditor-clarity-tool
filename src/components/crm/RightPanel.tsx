@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Send,
   ChevronDown,
@@ -22,11 +22,10 @@ import {
   BookOpen,
   UserRound,
   ShieldCheck,
-  Download,
-  RotateCcw,
-  FileCheck,
+  X,
+  Check,
 } from "lucide-react";
-import { ScrubTask, ScrubStatus, SCRUB_STATUS_CONFIG, CAN_REREQUREST_SCRUB } from "@/types/scrub";
+import { ScrubTask } from "@/types/scrub";
 
 interface RightPanelProps {
   editContent?: ReactNode;
@@ -40,6 +39,8 @@ interface RightPanelProps {
   scrubTasks: ScrubTask[];
   onRequestScrub: () => void;
   onScrubFileClick: (task: ScrubTask) => void;
+  // Sales Rep Actions
+  onRepActionSubmit: (action: "rejected" | "scrub", reason?: string) => void;
 }
 
 interface ActionRowProps {
@@ -64,9 +65,6 @@ const ActionRow = ({ icon, label, onClick, iconBg = "bg-muted" }: ActionRowProps
   </button>
 );
 
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-
 const RightPanel = ({
   editContent,
   onRequestDetails,
@@ -78,10 +76,16 @@ const RightPanel = ({
   scrubTasks,
   onRequestScrub,
   onScrubFileClick,
+  onRepActionSubmit,
 }: RightPanelProps) => {
   const [noteText, setNoteText] = useState("");
   const [requestInfoOpen, setRequestInfoOpen] = useState(false);
-  const [scrubSectionOpen, setScrubSectionOpen] = useState(true);
+
+  // Sales Rep Actions state
+  const [repAction, setRepAction] = useState<null | "rejected" | "scrub">(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [repComment, setRepComment] = useState("");
+  const [repSubmitted, setRepSubmitted] = useState(false);
 
   const notes = [
     "Call Nature : Manual-Outbound| Call start time: 2025-03-10 10:30",
@@ -92,15 +96,6 @@ const RightPanel = ({
   const handleAddNote = () => {
     if (noteText.trim()) setNoteText("");
   };
-
-  // Latest scrub task (most recent)
-  const latestScrub = scrubTasks.length > 0 ? scrubTasks[scrubTasks.length - 1] : null;
-  const latestCfg = latestScrub ? SCRUB_STATUS_CONFIG[latestScrub.status] : null;
-
-  // Can re-request scrub?
-  const canRerequest =
-    !latestScrub || CAN_REREQUREST_SCRUB.includes(latestScrub.status as ScrubStatus);
-  const isFirstRequest = !latestScrub;
 
   // Normal sidebar content
   const normalContent = (
@@ -262,130 +257,100 @@ const RightPanel = ({
         </CardContent>
       </Card>
 
-      {/* Scrub */}
-      <Card className={`shadow-none ${latestScrub ? "border-violet-200" : ""}`}>
+      {/* Sales Rep Actions */}
+      <Card className={`shadow-none ${repSubmitted ? (repAction === "rejected" ? "border-red-200" : "border-amber-200") : ""}`}>
         <CardContent className="p-3 space-y-3">
-          {/* Header row */}
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => setScrubSectionOpen(!scrubSectionOpen)}
-              className="flex items-center gap-2 flex-1 text-left"
-            >
-              <div className="h-6 w-6 rounded-md bg-violet-100 flex items-center justify-center">
-                <ShieldCheck className="h-3.5 w-3.5 text-violet-600" />
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
               </div>
-              <span className="text-sm font-medium text-foreground">Scrub</span>
-              {latestScrub && latestCfg && (
-                <Badge variant="outline" className={`text-[10px] h-4 px-1.5 border ${latestCfg.badgeClass}`}>
-                  {latestCfg.label}
+              <span className="text-sm font-medium text-foreground">Sales Rep Actions</span>
+              {repSubmitted && (
+                <Badge variant="outline" className={`text-[10px] h-4 px-1.5 border ${repAction === "rejected" ? "border-red-300 text-red-700 bg-red-50" : "border-amber-300 text-amber-700 bg-amber-50"}`}>
+                  {repAction === "rejected" ? "Rejected" : "Scrub Requested"}
                 </Badge>
               )}
-              <ChevronDown
-                className={`h-3.5 w-3.5 text-muted-foreground ml-auto transition-transform ${scrubSectionOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {/* Actions dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 gap-1 text-xs ml-2 shrink-0">
-                  Actions
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem
-                  onClick={onRequestScrub}
-                  disabled={!isFirstRequest && !canRerequest}
-                  className="gap-2 text-sm cursor-pointer"
-                >
-                  {canRerequest && !isFirstRequest ? (
-                    <RotateCcw className="h-4 w-4 text-violet-600" />
-                  ) : (
-                    <ShieldCheck className="h-4 w-4 text-violet-600" />
-                  )}
-                  {canRerequest && !isFirstRequest ? "Re-request Scrub" : "Request Scrub"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 text-sm cursor-pointer">
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                  Download Login Sheet
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            </div>
+            {repSubmitted && (
+              <button onClick={() => { setRepSubmitted(false); setRepAction(null); setRejectReason(""); setRepComment(""); }}
+                className="text-[10px] text-muted-foreground hover:text-foreground underline">Reset</button>
+            )}
           </div>
 
-          {/* Expanded content */}
-          {scrubSectionOpen && (
-            <>
-              {/* Current stage */}
-              {latestScrub && latestCfg && (
-                <div className={`rounded-lg p-2.5 ${latestCfg.bgClass} border ${latestCfg.badgeClass.split(" ").find(c => c.startsWith("border-")) || ""}`}>
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">
-                    Client File Stage
-                  </p>
-                  <p className={`text-sm font-semibold ${latestCfg.colorClass}`}>
-                    {latestCfg.clientStage}
-                  </p>
-                  {latestScrub.comment && (
-                    <p className="text-[11px] text-muted-foreground mt-1 italic">
-                      &quot;{latestScrub.comment}&quot;
-                    </p>
-                  )}
+          {repSubmitted ? (
+            <div className={`rounded-lg px-3 py-2.5 text-xs ${repAction === "rejected" ? "bg-red-50 border border-red-200 text-red-800" : "bg-amber-50 border border-amber-200 text-amber-800"}`}>
+              {repAction === "rejected"
+                ? `File rejected${rejectReason ? ` — ${rejectReason.replace(/-/g, " ")}` : ""}.`
+                : "Scrub requested successfully."}
+              {repComment && <p className="mt-1 italic text-muted-foreground">"{repComment}"</p>}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* Action toggle buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRepAction(repAction === "rejected" ? null : "rejected")}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border font-medium transition-colors ${repAction === "rejected" ? "bg-red-50 border-red-300 text-red-700" : "border-border text-muted-foreground hover:bg-muted/60"}`}>
+                  <X className="h-3 w-3" /> Reject Fill
+                </button>
+                <button
+                  onClick={() => setRepAction(repAction === "scrub" ? null : "scrub")}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border font-medium transition-colors ${repAction === "scrub" ? "bg-amber-50 border-amber-300 text-amber-700" : "border-border text-muted-foreground hover:bg-muted/60"}`}>
+                  <ShieldCheck className="h-3 w-3" /> Request Scrub
+                </button>
+              </div>
+
+              {/* Reject reason — shown when rejected */}
+              {repAction === "rejected" && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rejection Reason</p>
+                  <Select value={rejectReason} onValueChange={setRejectReason}>
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Select reason" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="incomplete-docs">Incomplete Documents</SelectItem>
+                      <SelectItem value="low-cibil">Low CIBIL Score</SelectItem>
+                      <SelectItem value="high-foir">High FOIR</SelectItem>
+                      <SelectItem value="income-insufficient">Insufficient Income</SelectItem>
+                      <SelectItem value="existing-defaults">Existing Defaults</SelectItem>
+                      <SelectItem value="wrong-info">Incorrect Information</SelectItem>
+                      <SelectItem value="duplicate">Duplicate Application</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
-              {/* Scrub files list */}
-              {scrubTasks.length > 0 ? (
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                    Scrub Files ({scrubTasks.length})
-                  </p>
-                  {[...scrubTasks].reverse().map((task, idx) => {
-                    const cfg = SCRUB_STATUS_CONFIG[task.status];
-                    return (
-                      <button
-                        key={task.id}
-                        onClick={() => onScrubFileClick(task)}
-                        className="flex items-start gap-2.5 w-full rounded-lg p-2.5 text-left border hover:border-primary/30 hover:bg-primary/5 transition-colors group"
-                      >
-                        <div className="h-7 w-7 rounded-md bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
-                          <FileCheck className="h-3.5 w-3.5 text-violet-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-xs font-medium text-foreground leading-none">
-                              Scrub #{scrubTasks.length - idx}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className={`text-[9px] h-3.5 px-1 border ${cfg.badgeClass}`}
-                            >
-                              {cfg.label}
-                            </Badge>
-                          </div>
-                          <p className="text-[10px] text-muted-foreground leading-none">
-                            {formatDate(task.requestedAt)}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
-                            Sales Rep: {task.assignedTL}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-primary mt-1.5" />
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-3">
-                  <ShieldCheck className="h-6 w-6 text-muted-foreground/30 mx-auto mb-1" />
-                  <p className="text-[11px] text-muted-foreground">No scrub requested yet</p>
-                  <p className="text-[10px] text-muted-foreground/60">
-                    Use Actions to Request Scrub
-                  </p>
-                </div>
-              )}
-            </>
+              {/* Comment */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Comment</p>
+                <Textarea
+                  value={repComment}
+                  onChange={(e) => setRepComment(e.target.value)}
+                  placeholder="Add notes..."
+                  className="min-h-[50px] text-xs resize-none bg-muted/50"
+                  rows={2}
+                />
+              </div>
+
+              {/* Submit */}
+              <Button
+                size="sm"
+                className="w-full h-7 text-xs gap-1.5"
+                disabled={!repAction || (repAction === "rejected" && !rejectReason)}
+                onClick={() => {
+                  if (repAction === "scrub") onRequestScrub();
+                  onRepActionSubmit(repAction!, rejectReason || undefined);
+                  setRepSubmitted(true);
+                }}
+              >
+                <Check className="h-3 w-3" />
+                {repAction === "rejected" ? "Confirm Rejection" : repAction === "scrub" ? "Request Scrub" : "Submit"}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

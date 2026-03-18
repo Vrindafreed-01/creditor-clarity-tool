@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,26 +7,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RefPersonData } from "@/types/client";
 
 interface ReferencePersonCardProps {
   personNumber: number;
+  data: RefPersonData;
+  onChange: (data: RefPersonData) => void;
+  requestedDetailIds?: string[];
 }
 
-const ReferencePersonCard = ({ personNumber }: ReferencePersonCardProps) => {
-  const [data, setData] = useState({
-    name: "",
-    relation: "",
-    mobile: "",
-    email: "",
-    address: "",
-    pinCode: "",
-  });
-
-  const update = (key: string, value: string) => setData({ ...data, [key]: value });
+const ReferencePersonCard = ({
+  personNumber,
+  data,
+  onChange,
+}: ReferencePersonCardProps) => {
+  const update = (key: keyof RefPersonData, value: string) =>
+    onChange({ ...data, [key]: value });
 
   return (
     <div className="bg-card rounded-lg border p-5">
-      <h3 className="text-sm font-semibold text-foreground mb-4">Reference Person {personNumber}</h3>
+      <h3 className="text-sm font-semibold text-foreground mb-4">
+        Reference Person {personNumber}
+      </h3>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-1.5">
           <Label className="crm-field-label">Name</Label>

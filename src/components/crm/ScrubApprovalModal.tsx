@@ -56,20 +56,6 @@ const TL_STATUS_OPTIONS: Array<{
     icon: Clock,
     iconClass: "text-orange-600",
   },
-  {
-    value: "credit-pending",
-    label: "Credit Pending",
-    description: "Credit officer & loan advisor to recheck lender fitment",
-    icon: CreditCard,
-    iconClass: "text-blue-600",
-  },
-  {
-    value: "invalid",
-    label: "Invalid",
-    description: "Scrub request is invalid",
-    icon: AlertTriangle,
-    iconClass: "text-gray-500",
-  },
 ];
 
 const ScrubApprovalModal = ({

@@ -17,6 +17,13 @@ const stageStyles: Record<string, string> = {
   DCP_AGREEMENT_SIGNED:
     "bg-blue-50 text-blue-700 border-blue-200",
 
+  // Request stages
+  "Details Requested": "bg-purple-50 text-purple-700 border-purple-300",
+  "Documents Requested": "bg-indigo-50 text-indigo-700 border-indigo-300",
+
+  // Rep action stages
+  "File Rejected": "bg-red-50 text-red-700 border-red-300",
+
   // Scrub-derived (from SCRUB_STATUS_CONFIG.clientStage)
   "Scrub Requested":
     "bg-amber-50 text-amber-700 border-amber-300",

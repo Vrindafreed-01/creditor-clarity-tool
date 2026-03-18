@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useState, useRef, ReactNode } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 import ClientHeader from "@/components/crm/ClientHeader";
 import LeftSidebar from "@/components/crm/LeftSidebar";
 import RightPanel from "@/components/crm/RightPanel";
-import CreditorTab from "@/components/crm/CreditorTab";
-import CalculatorTab from "@/components/crm/CalculatorTab";
-import DocumentsTab from "@/components/crm/DocumentsTab";
 import RequestDetailsView from "@/components/crm/RequestDetailsView";
 import RequestDocumentsView from "@/components/crm/RequestDocumentsView";
 import AssignSalesRepView from "@/components/crm/AssignSalesRepView";
@@ -24,6 +21,24 @@ import { Download, ShieldCheck, ArrowRight } from "lucide-react";
 
 import { ScrubTask, ScrubStatus, SCRUB_STATUS_CONFIG } from "@/types/scrub";
 import { Creditor, INITIAL_INCLUDED, INITIAL_EXCLUDED } from "@/types/creditor";
+import {
+  PersonalData,
+  AddressData,
+  EmploymentData,
+  BankData,
+  RefPersonData,
+  SentDetailItem,
+  SentDetailRequest,
+  SentDocItem,
+  SentDocumentRequest,
+  INITIAL_PERSONAL_DATA,
+  INITIAL_ADDRESS_DATA,
+  INITIAL_EMPLOYMENT_DATA,
+  INITIAL_BANK_DATA,
+  INITIAL_REF_DATA,
+  getEmptyDetailIds,
+  isDetailFilled,
+} from "@/types/client";
 
 // ── Mock client data ───────────────────────────────────────────────────────────
 const CLIENT_KFS_ID     = "KFSAPP-INH-0226-2362704";
@@ -69,7 +84,6 @@ const Index = () => {
   // ── Edit panel (shown in RightPanel — used by CreditorTab) ────────────────
   const [editPanelContent, setEditPanelContent] = useState<ReactNode>(null);
 
-
   // ── Editable stat box values ──────────────────────────────────────────────
   const [totalOutstanding, setTotalOutstanding] = useState(1432155);
   const [cibilScore, setCibilScore]             = useState(751);
@@ -88,21 +102,78 @@ const Index = () => {
     });
   };
 
+  // ── Client form data (lifted from PRE LOGIN DETAILS cards) ─────────────────
+  const [personalData, setPersonalData]     = useState<PersonalData>(INITIAL_PERSONAL_DATA);
+  const [addressData, setAddressData]       = useState<AddressData>(INITIAL_ADDRESS_DATA);
+  const [employmentData, setEmploymentData] = useState<EmploymentData>(INITIAL_EMPLOYMENT_DATA);
+  const [bankData, setBankData]             = useState<BankData>(INITIAL_BANK_DATA);
+  const [ref1Data, setRef1Data]             = useState<RefPersonData>(INITIAL_REF_DATA);
+  const [ref2Data, setRef2Data]             = useState<RefPersonData>(INITIAL_REF_DATA);
+
+  // ── Request tracking ───────────────────────────────────────────────────────
+  const [sentDetailRequests, setSentDetailRequests]     = useState<SentDetailRequest[]>([]);
+  const [sentDocumentRequests, setSentDocumentRequests] = useState<SentDocumentRequest[]>([]);
+
+  // Compute which detail IDs have empty form fields right now
+  const emptyDetailIds = getEmptyDetailIds(
+    personalData, addressData, employmentData, bankData, ref1Data, ref2Data
+  );
+
+  // All detail IDs that have ever been requested (for badges in PRE LOGIN DETAILS)
+  const requestedDetailIds = sentDetailRequests.flatMap(r => r.items.map(i => i.id));
+
+  // Check if a detail ID is now filled
+  const checkDetailFilled = (id: string) =>
+    isDetailFilled(id, personalData, addressData, employmentData, bankData, ref1Data, ref2Data);
+
+  // ── Request send handlers ──────────────────────────────────────────────────
+  const handleSendDetailRequest = (items: SentDetailItem[]) => {
+    setSentDetailRequests(prev => [
+      ...prev,
+      { id: Date.now().toString(), sentAt: new Date().toISOString(), items },
+    ]);
+  };
+
+  const handleSendDocumentRequest = (items: SentDocItem[]) => {
+    setSentDocumentRequests(prev => [
+      ...prev,
+      { id: Date.now().toString(), sentAt: new Date().toISOString(), items },
+    ]);
+  };
+
   // ── Scrub state ────────────────────────────────────────────────────────────
   const [scrubTasks, setScrubTasks]               = useState<ScrubTask[]>([]);
   const [approvalOpen, setApprovalOpen]           = useState(false);
   const [selectedScrubTask, setSelectedScrubTask] = useState<ScrubTask | null>(null);
   const tabsRef                                   = useRef<HTMLDivElement>(null);
 
+  // ── Sales Rep Action state ─────────────────────────────────────────────────
+  const [repActionStatus, setRepActionStatus] = useState<null | "rejected" | "scrub">(null);
+  const [repActionReason, setRepActionReason] = useState("");
+
+  const handleRepActionSubmit = (action: "rejected" | "scrub", reason?: string) => {
+    setRepActionStatus(action);
+    if (reason) setRepActionReason(reason);
+  };
+
   // Derived scrub values
   const latestScrub  = scrubTasks.length > 0 ? scrubTasks[scrubTasks.length - 1] : null;
   const latestCfg    = latestScrub ? SCRUB_STATUS_CONFIG[latestScrub.status] : null;
   const pendingCount = scrubTasks.filter((t) => t.status === "scrub-check-pending").length;
 
-  // Dynamic stage for header — auto-updates from scrub status
-  const displayStage = latestScrub
-    ? SCRUB_STATUS_CONFIG[latestScrub.status].clientStage
-    : "DCP_AGREEMENT_SIGNED";
+  // Dynamic stage for header — priority: rep action > scrub > requests > default
+  const displayStage =
+    repActionStatus === "rejected"
+      ? "File Rejected"
+      : repActionStatus === "scrub"
+      ? "Scrub Requested"
+      : latestScrub
+      ? SCRUB_STATUS_CONFIG[latestScrub.status].clientStage
+      : sentDocumentRequests.length > 0
+      ? "Documents Requested"
+      : sentDetailRequests.length > 0
+      ? "Details Requested"
+      : "DCP_AGREEMENT_SIGNED";
 
   const handleCheckLenderMatch = () => {
     const el = document.getElementById("lender-match");
@@ -170,9 +241,23 @@ const Index = () => {
   const renderMainContent = () => {
     switch (activeView) {
       case "request-details":
-        return <RequestDetailsView onClose={() => setActiveView("main")} />;
+        return (
+          <RequestDetailsView
+            onClose={() => setActiveView("main")}
+            emptyDetailIds={emptyDetailIds}
+            onSend={handleSendDetailRequest}
+            sentRequests={sentDetailRequests}
+            isDetailFilled={checkDetailFilled}
+          />
+        );
       case "request-documents":
-        return <RequestDocumentsView onClose={() => setActiveView("main")} />;
+        return (
+          <RequestDocumentsView
+            onClose={() => setActiveView("main")}
+            onSend={handleSendDocumentRequest}
+            sentRequests={sentDocumentRequests}
+          />
+        );
       case "assign-sales-rep":
         return <AssignSalesRepView onClose={() => setActiveView("main")} />;
       case "tl-tasks":
@@ -265,31 +350,13 @@ const Index = () => {
                       value="overview"
                       className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
-                      PRE LOGIN DETAILS
+                      QUALIFICATION DETAILS
                     </TabsTrigger>
                     <TabsTrigger
                       value="secondary-login"
                       className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                     >
-                      POST LOGIN DETAILS
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="creditor"
-                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      CREDITOR
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="documents"
-                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      DOCUMENTS
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="calculator"
-                      className="text-xs font-medium px-5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                    >
-                      CALCULATOR
+                      PRE LOGIN DETAILS
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -306,34 +373,23 @@ const Index = () => {
                 </TabsContent>
 
                 <TabsContent value="secondary-login">
-                  <SecondaryLoginTab />
-                </TabsContent>
-
-                <TabsContent value="creditor">
-                  <CreditorTab
-                    included={included}
-                    setIncluded={setIncluded}
-                    excluded={excluded}
-                    setExcluded={setExcluded}
-                    isEditing={false}
-                    onSetEditPanel={setEditPanelContent}
+                  <SecondaryLoginTab
+                    personalData={personalData}
+                    onPersonalChange={setPersonalData}
+                    addressData={addressData}
+                    onAddressChange={setAddressData}
+                    employmentData={employmentData}
+                    onEmploymentChange={setEmploymentData}
+                    bankData={bankData}
+                    onBankChange={setBankData}
+                    ref1Data={ref1Data}
+                    onRef1Change={setRef1Data}
+                    ref2Data={ref2Data}
+                    onRef2Change={setRef2Data}
+                    requestedDetailIds={requestedDetailIds}
                   />
                 </TabsContent>
 
-                <TabsContent value="documents">
-                  <DocumentsTab />
-                </TabsContent>
-
-                <TabsContent value="calculator">
-                  <CalculatorTab
-                    included={included}
-                    setIncluded={setIncluded}
-                    excluded={excluded}
-                    setExcluded={setExcluded}
-                    stcIds={stcIds}
-                    onToggleStc={handleToggleStc}
-                  />
-                </TabsContent>
               </Tabs>
             </div>
           </div>
@@ -378,6 +434,7 @@ const Index = () => {
               scrubTasks={scrubTasks}
               onRequestScrub={handleRequestScrub}
               onScrubFileClick={handleScrubFileClick}
+              onRepActionSubmit={handleRepActionSubmit}
             />
           </div>
         )}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -282,6 +283,13 @@ const DocumentManager = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [viewerDoc, setViewerDoc] = useState<Document | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+
+  const toggleDocSelect = (id: string) => setSelectedDocIds(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const [uploadForm, setUploadForm] = useState<UploadForm>({
     type: "", dateStart: "", dateEnd: "", comment: "", usedForLogin: "yes",
@@ -332,6 +340,11 @@ const DocumentManager = () => {
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h3 className="text-sm font-semibold text-foreground">Document Manager</h3>
           <div className="flex items-center gap-2">
+            {selectedDocIds.size > 0 && (
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => { toast.success(`Downloading ${selectedDocIds.size} file(s)`); setSelectedDocIds(new Set()); }}>
+                <Download className="h-3.5 w-3.5" /> Download ({selectedDocIds.size})
+              </Button>
+            )}
             {isEditing ? (
               <Button size="sm" className="gap-1.5 text-xs h-8" onClick={handleSaveAll}>
                 <Check className="h-3.5 w-3.5" /> Save
@@ -353,6 +366,16 @@ const DocumentManager = () => {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
+                <TableHead className="w-10 px-3">
+                  <Checkbox
+                    checked={selectedDocIds.size === docs.filter(d => !d.archived).length && docs.filter(d => !d.archived).length > 0}
+                    onCheckedChange={(checked) => {
+                      if (checked) setSelectedDocIds(new Set(docs.filter(d => !d.archived).map(d => d.id)));
+                      else setSelectedDocIds(new Set());
+                    }}
+                    className="h-4 w-4"
+                  />
+                </TableHead>
                 <TableHead className="text-xs min-w-[160px]">Document Type</TableHead>
                 <TableHead className="text-xs">Document Name</TableHead>
                 <TableHead className="text-xs min-w-[200px]">Date Range</TableHead>
@@ -366,6 +389,13 @@ const DocumentManager = () => {
                   key={doc.id}
                   className={`transition-colors ${isEditing ? "bg-primary/5 hover:bg-primary/5" : "hover:bg-muted/10"}`}
                 >
+                  <TableCell className="px-3 py-3">
+                    <Checkbox
+                      checked={selectedDocIds.has(doc.id)}
+                      onCheckedChange={() => toggleDocSelect(doc.id)}
+                      className="h-4 w-4"
+                    />
+                  </TableCell>
                   {/* ── Document Type ── */}
                   <TableCell className="py-3 px-3">
                     {isEditing ? (

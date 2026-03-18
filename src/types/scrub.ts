@@ -2,9 +2,7 @@ export type ScrubStatus =
   | "scrub-check-pending"
   | "approved"
   | "rejected"
-  | "rep-pending"
-  | "credit-pending"
-  | "invalid";
+  | "rep-pending";
 
 export interface ScrubTask {
   id: string;
@@ -65,23 +63,7 @@ export const SCRUB_STATUS_CONFIG: Record<
     badgeClass: "border-orange-300 bg-orange-50 text-orange-700",
     recipients: ["Loan Advisor", "TL"],
   },
-  "credit-pending": {
-    label: "Credit Pending",
-    clientStage: "Under Review – Credit Pending",
-    colorClass: "text-blue-700",
-    bgClass: "bg-blue-50",
-    badgeClass: "border-blue-300 bg-blue-50 text-blue-700",
-    recipients: ["Loan Advisor", "Credit Officer", "TL"],
-  },
-  invalid: {
-    label: "Invalid",
-    clientStage: "Invalid",
-    colorClass: "text-gray-700",
-    bgClass: "bg-gray-50",
-    badgeClass: "border-gray-300 bg-gray-50 text-gray-700",
-    recipients: ["Loan Advisor", "TL"],
-  },
 };
 
 /** Statuses that allow the loan advisor to re-request a scrub */
-export const CAN_REREQUREST_SCRUB: ScrubStatus[] = ["rep-pending", "credit-pending", "rejected"];
+export const CAN_REREQUREST_SCRUB: ScrubStatus[] = ["rep-pending", "rejected"];
