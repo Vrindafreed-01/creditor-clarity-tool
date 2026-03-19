@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import type { Creditor } from "@/types/creditor";
 import { DEBT_TYPES } from "@/types/creditor";
+import DocumentManager from "./DocumentManager";
 
 /* ── Formatters ── */
 const fmtR = (n: number) =>
@@ -1293,6 +1294,9 @@ const DashboardTab = ({
           </div>
         </div>
       </div>
+
+      {/* ═══════════════ SECTION 6 · DOCUMENT MANAGER ═══════════════ */}
+      <DocumentManager />
 
       {/* ═══════════════ ADD CREDITOR DIALOG ═══════════════ */}
       <Dialog open={addCreditorOpen} onOpenChange={setAddCreditorOpen}>
