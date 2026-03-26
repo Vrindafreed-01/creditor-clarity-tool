@@ -34,7 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { UnifiedDatePicker } from "@/components/ui/unified-date-picker";
 import {
-  Upload, X, Download, ExternalLink, FileText,
+  Upload, X, Download, ExternalLink, FileText, CalendarDays,
   ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Printer, Pencil, Check,
 } from "lucide-react";
 import { toast } from "sonner";

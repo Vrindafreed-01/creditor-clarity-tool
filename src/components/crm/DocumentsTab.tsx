@@ -6,7 +6,7 @@ const DocumentsTab = () => {
   return (
     <div className="space-y-5">
       {/* DocumentManager always in edit mode on the dedicated Documents tab */}
-      <DocumentManager isEditing={true} />
+      <DocumentManager />
       <RequestDocument />
       <AgreementAnalysis />
     </div>

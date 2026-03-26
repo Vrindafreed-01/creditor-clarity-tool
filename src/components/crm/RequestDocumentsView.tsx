@@ -124,7 +124,7 @@ const RequestDocumentsView = ({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Document Type</label>
-            <Select value={draftType} onValueChange={(v) => { setDraftType(v); setDraftMonths([]); }}>
+            <Select value={draftType} onValueChange={(v) => { setDraftType(v); setDraftPeriod(""); }}>
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Select document type..." />
               </SelectTrigger>
