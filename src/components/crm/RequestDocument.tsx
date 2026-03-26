@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { UnifiedDatePicker } from "@/components/ui/unified-date-picker";
 import {
   Table,
   TableBody,
@@ -104,7 +104,7 @@ const RequestDocument = () => {
               </div>
               <div className="space-y-1.5">
                 <Label className="crm-field-label">Date Range (if applicable)</Label>
-                <Input placeholder="e.g. Oct 2023 - Mar 2024" className="h-9 text-sm" />
+                <UnifiedDatePicker mode="month-range" value="" onChange={() => {}} placeholder="Select range" />
               </div>
               <div className="space-y-1.5">
                 <Label className="crm-field-label">Add Note</Label>

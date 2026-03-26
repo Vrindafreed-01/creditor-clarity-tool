@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UnifiedDatePicker } from "@/components/ui/unified-date-picker";
 import {
   Select,
   SelectContent,
@@ -55,12 +56,16 @@ const PersonalDetailsAccordion = ({
           <Input value={data.aadhaar} onChange={(e) => update("aadhaar", e.target.value)} className="h-9 text-sm" placeholder="XXXX XXXX XXXX" />
         </div>
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Date of Birth (MM/DD/YYYY)</Label>
-          <Input value={data.dob} onChange={(e) => update("dob", e.target.value)} className="h-9 text-sm" type="date" />
+          <Label className="crm-field-label">Date of Birth</Label>
+          <UnifiedDatePicker value={data.dob} onChange={(v) => update("dob", v)} placeholder="MM/DD/YYYY" />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">Mobile Number</Label>
           <Input value={data.mobile} onChange={(e) => update("mobile", e.target.value)} className="h-9 text-sm" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="crm-field-label">Alternate Mobile Number</Label>
+          <Input value={data.alternateMobile} onChange={(e) => update("alternateMobile", e.target.value)} className="h-9 text-sm" />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">Personal Email Address</Label>

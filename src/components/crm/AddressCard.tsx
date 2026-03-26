@@ -91,6 +91,26 @@ const AddressCard = ({ data, onChange }: AddressCardProps) => {
           onAddressChange={(v) => update("currentAddress", v)}
           onOwnershipChange={(v) => update("currentOwnership", v)}
         />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="space-y-1.5">
+            <Label className="crm-field-label">Total Years at Present Address</Label>
+            <Input
+              value={data.yearsAtPresentAddress}
+              onChange={(e) => update("yearsAtPresentAddress", e.target.value)}
+              className="h-9 text-sm"
+              placeholder="e.g. 3"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="crm-field-label">Total Years at Permanent Address</Label>
+            <Input
+              value={data.yearsAtPermanentAddress}
+              onChange={(e) => update("yearsAtPermanentAddress", e.target.value)}
+              className="h-9 text-sm"
+              placeholder="e.g. 10"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

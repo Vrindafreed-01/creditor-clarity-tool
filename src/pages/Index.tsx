@@ -17,7 +17,8 @@ import ScrubApprovalModal from "@/components/crm/ScrubApprovalModal";
 import PortalPage from "@/components/crm/PortalPage";
 import DashboardTab from "@/components/crm/DashboardTab";
 import SecondaryLoginTab from "@/components/crm/SecondaryLoginTab";
-import { Download, ShieldCheck, ArrowRight } from "lucide-react";
+import { Download, ShieldCheck, ArrowRight, Save } from "lucide-react";
+import { toast } from "sonner";
 
 import { ScrubTask, ScrubStatus, SCRUB_STATUS_CONFIG } from "@/types/scrub";
 import { Creditor, INITIAL_INCLUDED, INITIAL_EXCLUDED } from "@/types/creditor";
@@ -181,7 +182,7 @@ const Index = () => {
   };
 
   // ── Scrub handlers ─────────────────────────────────────────────────────────
-  const handleRequestScrub = () => {
+  const handleRequestScrub = (primaryLender: string, secondaryLender?: string) => {
     const newTask: ScrubTask = {
       id: Date.now().toString(),
       kfsId:           CLIENT_KFS_ID,
@@ -192,6 +193,8 @@ const Index = () => {
       status:          "scrub-check-pending",
       requestedAt:     new Date().toISOString(),
       assignedTL:      ASSIGNED_TL,
+      primaryLender,
+      secondaryLender,
     };
     setScrubTasks((prev) => [...prev, newTask]);
   };
@@ -282,7 +285,7 @@ const Index = () => {
                 displayValue={`₹${totalOutstanding.toLocaleString()}`}
               />
               <StatBox
-                label="CIBIL Score"
+                label="Experian Score"
                 displayValue={String(cibilScore)}
                 valueClass={cibilScoreClass}
               />
@@ -294,7 +297,7 @@ const Index = () => {
                   onClick={() => {}}
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Download CSV
+                  Download Login Sheet
                 </Button>
               </div>
             </div>
@@ -344,7 +347,8 @@ const Index = () => {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <div className="flex justify-center mb-5">
+                <div className="flex items-center mb-5">
+                  <div className="flex-1" />
                   <TabsList className="bg-card border h-10 p-1">
                     <TabsTrigger
                       value="overview"
@@ -359,6 +363,22 @@ const Index = () => {
                       PRE LOGIN DETAILS
                     </TabsTrigger>
                   </TabsList>
+                  <div className="flex-1 flex justify-end">
+                    <Button
+                      size="sm"
+                      className="gap-1.5 text-xs h-9"
+                      onClick={() => {
+                        toast.success(
+                          activeTab === "overview"
+                            ? "Qualification details saved"
+                            : "Pre-login details saved"
+                        );
+                      }}
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                      Save
+                    </Button>
+                  </div>
                 </div>
 
                 <TabsContent value="overview">

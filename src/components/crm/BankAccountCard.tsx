@@ -14,15 +14,11 @@ const BankAccountCard = ({ data, onChange }: BankAccountCardProps) => {
 
   return (
     <div className="bg-card rounded-lg border p-5">
-      <h3 className="text-sm font-semibold text-foreground mb-4">Bank &amp; Residence Duration</h3>
+      <h3 className="text-sm font-semibold text-foreground mb-4">Bank Details</h3>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-1.5">
-          <Label className="crm-field-label">Total Years at Present Address</Label>
-          <Input value={data.yearsAtPresentAddress} onChange={(e) => update("yearsAtPresentAddress", e.target.value)} className="h-9 text-sm" placeholder="e.g. 3" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="crm-field-label">Total Years at Permanent Address</Label>
-          <Input value={data.yearsAtPermanentAddress} onChange={(e) => update("yearsAtPermanentAddress", e.target.value)} className="h-9 text-sm" placeholder="e.g. 10" />
+          <Label className="crm-field-label">Bank Name</Label>
+          <Input value={data.bankName} onChange={(e) => update("bankName", e.target.value)} className="h-9 text-sm" placeholder="e.g. HDFC Bank" />
         </div>
         <div className="space-y-1.5">
           <Label className="crm-field-label">IFSC Code</Label>

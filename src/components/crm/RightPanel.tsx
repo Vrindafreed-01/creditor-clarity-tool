@@ -37,10 +37,12 @@ interface RightPanelProps {
   onLenderPolicy: () => void;
   // Scrub
   scrubTasks: ScrubTask[];
-  onRequestScrub: () => void;
+  onRequestScrub: (primaryLender: string, secondaryLender?: string) => void;
   onScrubFileClick: (task: ScrubTask) => void;
   // Sales Rep Actions
   onRepActionSubmit: (action: "rejected" | "scrub", reason?: string) => void;
+  // Lender names for scrub selection
+  availableLenders?: string[];
 }
 
 interface ActionRowProps {
@@ -65,6 +67,15 @@ const ActionRow = ({ icon, label, onClick, iconBg = "bg-muted" }: ActionRowProps
   </button>
 );
 
+const SCRUB_LENDER_LIST = [
+  "AFL", "TATA Capital", "IDFC First", "Bajaj Finserv", "Piramal Finance",
+  "HDFC Bank", "ICICI Bank", "Axis Bank", "Kotak Mahindra", "SBI",
+  "Bank of Baroda", "Canara Bank", "Union Bank", "IndusInd Bank",
+  "Yes Bank", "Federal Bank", "RBL Bank", "Hero FinCorp",
+  "Fullerton India", "Muthoot Finance", "Manappuram Finance",
+  "L&T Finance", "Cholamandalam", "Shriram Finance", "IndiaBulls",
+];
+
 const RightPanel = ({
   editContent,
   onRequestDetails,
@@ -77,6 +88,7 @@ const RightPanel = ({
   onRequestScrub,
   onScrubFileClick,
   onRepActionSubmit,
+  availableLenders,
 }: RightPanelProps) => {
   const [noteText, setNoteText] = useState("");
   const [requestInfoOpen, setRequestInfoOpen] = useState(false);
@@ -86,6 +98,11 @@ const RightPanel = ({
   const [rejectReason, setRejectReason] = useState("");
   const [repComment, setRepComment] = useState("");
   const [repSubmitted, setRepSubmitted] = useState(false);
+
+  // Lender selection for scrub
+  const lenderList = availableLenders && availableLenders.length > 0 ? availableLenders : SCRUB_LENDER_LIST;
+  const [scrubPrimaryLender, setScrubPrimaryLender] = useState("");
+  const [scrubSecondaryLender, setScrubSecondaryLender] = useState("");
 
   const notes = [
     "Call Nature : Manual-Outbound| Call start time: 2025-03-10 10:30",
@@ -284,6 +301,12 @@ const RightPanel = ({
               {repAction === "rejected"
                 ? `File rejected${rejectReason ? ` — ${rejectReason.replace(/-/g, " ")}` : ""}.`
                 : "Scrub requested successfully."}
+              {repAction === "scrub" && scrubPrimaryLender && (
+                <div className="mt-1.5 space-y-0.5">
+                  <p className="font-medium">Primary: <span className="font-normal">{scrubPrimaryLender}</span></p>
+                  {scrubSecondaryLender && <p className="font-medium">Secondary: <span className="font-normal">{scrubSecondaryLender}</span></p>}
+                </div>
+              )}
               {repComment && <p className="mt-1 italic text-muted-foreground">"{repComment}"</p>}
             </div>
           ) : (
@@ -324,6 +347,45 @@ const RightPanel = ({
                 </div>
               )}
 
+              {/* Lender selection — shown when scrub */}
+              {repAction === "scrub" && (
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                      Primary Lender <span className="text-red-500">*</span>
+                    </p>
+                    <Select value={scrubPrimaryLender} onValueChange={(v) => {
+                      setScrubPrimaryLender(v);
+                      if (v === scrubSecondaryLender) setScrubSecondaryLender("");
+                    }}>
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue placeholder="Select primary lender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lenderList.map((l) => (
+                          <SelectItem key={l} value={l}>{l}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                      Secondary Lender <span className="text-muted-foreground/50 normal-case">(optional)</span>
+                    </p>
+                    <Select value={scrubSecondaryLender} onValueChange={setScrubSecondaryLender}>
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue placeholder="Select secondary lender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {lenderList.filter(l => l !== scrubPrimaryLender).map((l) => (
+                          <SelectItem key={l} value={l}>{l}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
               {/* Comment */}
               <div className="space-y-1">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Comment</p>
@@ -340,9 +402,9 @@ const RightPanel = ({
               <Button
                 size="sm"
                 className="w-full h-7 text-xs gap-1.5"
-                disabled={!repAction || (repAction === "rejected" && !rejectReason)}
+                disabled={!repAction || (repAction === "rejected" && !rejectReason) || (repAction === "scrub" && !scrubPrimaryLender)}
                 onClick={() => {
-                  if (repAction === "scrub") onRequestScrub();
+                  if (repAction === "scrub") onRequestScrub(scrubPrimaryLender, scrubSecondaryLender || undefined);
                   onRepActionSubmit(repAction!, rejectReason || undefined);
                   setRepSubmitted(true);
                 }}

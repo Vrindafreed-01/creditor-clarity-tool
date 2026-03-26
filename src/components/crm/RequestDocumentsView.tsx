@@ -10,12 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarDays, ChevronLeft as ChevLeft, ChevronRight as ChevRight } from "lucide-react";
+import { UnifiedDatePicker } from "@/components/ui/unified-date-picker";
 import { toast } from "sonner";
 import { SentDocItem, SentDocumentRequest } from "@/types/client";
 
@@ -34,45 +29,6 @@ const DOC_CATEGORIES = [
   { id: "others", label: "Others", requiresMonths: false },
 ];
 
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-const MonthPicker = ({ selected, onToggle }: { selected: string[]; onToggle: (m: string) => void }) => {
-  const [open, setOpen] = useState(false);
-  const [year, setYear] = useState(new Date().getFullYear());
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button type="button" className="inline-flex items-center gap-1 h-7 rounded-md px-2 text-xs border bg-muted/40 hover:bg-muted/60 transition-colors">
-          <CalendarDays className="h-3 w-3 text-muted-foreground" />
-          {selected.length > 0 ? `${selected.length} month${selected.length > 1 ? "s" : ""} selected` : "Select months"}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-3 shadow-xl rounded-xl" align="start" sideOffset={4}>
-        <div className="flex items-center justify-between mb-2">
-          <button type="button" onClick={() => setYear(y => y - 1)} className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted">
-            <ChevLeft className="h-4 w-4" />
-          </button>
-          <span className="text-sm font-semibold">{year}</span>
-          <button type="button" onClick={() => setYear(y => y + 1)} className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted">
-            <ChevRight className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-1">
-          {MONTHS.map(m => {
-            const val = `${m} ${year}`;
-            const isSel = selected.includes(val);
-            return (
-              <button key={m} type="button" onClick={() => onToggle(val)}
-                className={`h-8 rounded-full text-xs font-medium transition-colors ${isSel ? "bg-primary text-primary-foreground" : "hover:bg-primary/10"}`}>
-                {m}
-              </button>
-            );
-          })}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-};
 
 interface DocRequest {
   id: string;
@@ -96,13 +52,13 @@ const RequestDocumentsView = ({
   sentRequests = [],
 }: RequestDocumentsViewProps) => {
   const [draftType, setDraftType] = useState("");
-  const [draftMonths, setDraftMonths] = useState<string[]>([]);
+  const [draftPeriod, setDraftPeriod] = useState("");
   const [draftComment, setDraftComment] = useState("");
   const [requests, setRequests] = useState<DocRequest[]>([]);
 
   const selectedCat = DOC_CATEGORIES.find(c => c.id === draftType);
 
-  const toggleMonth = (m: string) => setDraftMonths(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
+  const draftMonths = draftPeriod ? draftPeriod.split(" – ").map(s => s.trim()).filter(Boolean) : [];
 
   const handleAddRequest = () => {
     if (!draftType) return;
@@ -117,7 +73,7 @@ const RequestDocumentsView = ({
     };
     setRequests(prev => [...prev, req]);
     setDraftType("");
-    setDraftMonths([]);
+    setDraftPeriod("");
     setDraftComment("");
   };
 
@@ -182,22 +138,13 @@ const RequestDocumentsView = ({
 
           {selectedCat?.requiresMonths && (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Select Month(s)</label>
-              <div className="flex items-center gap-2 flex-wrap">
-                <MonthPicker selected={draftMonths} onToggle={toggleMonth} />
-                {draftMonths.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {draftMonths.map(m => (
-                      <Badge key={m} variant="secondary" className="text-[10px] gap-1 pl-2 pr-1">
-                        {m}
-                        <button type="button" onClick={() => toggleMonth(m)}>
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <label className="text-xs font-medium text-foreground">Select Period</label>
+              <UnifiedDatePicker
+                mode="month-range"
+                value={draftPeriod}
+                onChange={setDraftPeriod}
+                placeholder="Select range"
+              />
             </div>
           )}
 

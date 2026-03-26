@@ -8,6 +8,7 @@ export interface PersonalData {
   aadhaar: string;
   dob: string;
   mobile: string;
+  alternateMobile: string;
   personalEmail: string;
   officialEmail: string;
   gender: string;
@@ -21,24 +22,26 @@ export interface AddressData {
   permanentOwnership: string;
   currentAddress: string;
   currentOwnership: string;
+  yearsAtPresentAddress: string;
+  yearsAtPermanentAddress: string;
 }
 
 export interface EmploymentData {
   occupation: string;
   companyName: string;
   inhandSalary: string;
-  regularIncentive: string;
+  additionalIncome: string;
   dateOfJoining: string;
   totalWorkExp: string;
   currentDesignation: string;
   officeAddress: string;
+  officeContactNumber: string;
 }
 
 export interface BankData {
+  bankName: string;
   ifscCode: string;
   accountNumber: string;
-  yearsAtPresentAddress: string;
-  yearsAtPermanentAddress: string;
 }
 
 export interface RefPersonData {
@@ -140,7 +143,7 @@ export function isDetailFilled(
 
 export const INITIAL_PERSONAL_DATA: PersonalData = {
   nameAsPan: "", nameAsAadhaar: "", fatherName: "", motherName: "",
-  spouseName: "", panNo: "", aadhaar: "", dob: "", mobile: "",
+  spouseName: "", panNo: "", aadhaar: "", dob: "", mobile: "", alternateMobile: "",
   personalEmail: "", officialEmail: "", gender: "", maritalStatus: "",
 };
 
@@ -148,15 +151,16 @@ export const INITIAL_ADDRESS_DATA: AddressData = {
   aadhaarAddress: "", aadhaarOwnership: "",
   permanentAddress: "", permanentOwnership: "",
   currentAddress: "", currentOwnership: "",
+  yearsAtPresentAddress: "", yearsAtPermanentAddress: "",
 };
 
 export const INITIAL_EMPLOYMENT_DATA: EmploymentData = {
-  occupation: "", companyName: "", inhandSalary: "", regularIncentive: "",
-  dateOfJoining: "", totalWorkExp: "", currentDesignation: "", officeAddress: "",
+  occupation: "", companyName: "", inhandSalary: "", additionalIncome: "",
+  dateOfJoining: "", totalWorkExp: "", currentDesignation: "", officeAddress: "", officeContactNumber: "",
 };
 
 export const INITIAL_BANK_DATA: BankData = {
-  ifscCode: "", accountNumber: "", yearsAtPresentAddress: "", yearsAtPermanentAddress: "",
+  bankName: "", ifscCode: "", accountNumber: "",
 };
 
 export const INITIAL_REF_DATA: RefPersonData = {

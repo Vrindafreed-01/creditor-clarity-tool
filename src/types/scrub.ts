@@ -16,6 +16,8 @@ export interface ScrubTask {
   assignedTL: string;
   comment?: string;
   updatedAt?: string;        // ISO string — when TL last acted
+  primaryLender?: string;
+  secondaryLender?: string;
 }
 
 // ── Maps ──────────────────────────────────────────────────────────────────────

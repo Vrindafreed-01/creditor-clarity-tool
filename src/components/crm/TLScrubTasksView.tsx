@@ -34,6 +34,11 @@ const formatDate = (iso: string) => {
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 };
 
+const formatTime = (iso: string) => {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+};
+
 const TLScrubTasksView = ({
   tasks,
   onClose,
@@ -93,9 +98,10 @@ const TLScrubTasksView = ({
                   <TableHead className="text-xs font-semibold">KFS ID</TableHead>
                   <TableHead className="text-xs font-semibold">Mobile</TableHead>
                   <TableHead className="text-xs font-semibold">Company Name</TableHead>
-                  <TableHead className="text-xs font-semibold">Category</TableHead>
+                  <TableHead className="text-xs font-semibold">Lenders</TableHead>
                   <TableHead className="text-xs font-semibold">Location</TableHead>
                   <TableHead className="text-xs font-semibold">Requested</TableHead>
+                  <TableHead className="text-xs font-semibold">Last Action</TableHead>
                   <TableHead className="text-xs font-semibold">Assigned TL</TableHead>
                   <TableHead className="text-xs font-semibold">Task Status</TableHead>
                   <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
@@ -119,13 +125,44 @@ const TLScrubTasksView = ({
                     <TableCell className="text-xs text-muted-foreground">{task.mobileNumber}</TableCell>
                     <TableCell className="text-xs font-medium">{task.companyName}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="text-[10px] font-normal">
-                        {task.companyCategory}
-                      </Badge>
+                      <div className="flex flex-col gap-0.5">
+                        {task.primaryLender && (
+                          <div className="flex items-center gap-1">
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-medium border-primary/40 text-primary bg-primary/5">
+                              Primary
+                            </Badge>
+                            <span className="text-xs font-medium">{task.primaryLender}</span>
+                          </div>
+                        )}
+                        {task.secondaryLender && (
+                          <div className="flex items-center gap-1">
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-normal border-muted-foreground/30 text-muted-foreground">
+                              Secondary
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">{task.secondaryLender}</span>
+                          </div>
+                        )}
+                        {!task.primaryLender && !task.secondaryLender && (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{task.location}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDate(task.requestedAt)}
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">{formatDate(task.requestedAt)}</span>
+                        <span className="text-[10px] text-muted-foreground/70">{formatTime(task.requestedAt)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {task.updatedAt ? (
+                        <div className="flex flex-col">
+                          <span className="text-xs text-muted-foreground">{formatDate(task.updatedAt)}</span>
+                          <span className="text-[10px] text-muted-foreground/70">{formatTime(task.updatedAt)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{task.assignedTL}</TableCell>
                     <TableCell>

@@ -32,10 +32,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { UnifiedDatePicker } from "@/components/ui/unified-date-picker";
 import {
   Upload, X, Download, ExternalLink, FileText,
   ChevronLeft, ChevronRight, Minus, Plus, RotateCcw, Printer, Pencil, Check,
-  CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -271,8 +271,7 @@ const DocViewerSheet = ({ doc, open, onClose }: { doc: Document | null; open: bo
 /* ── Upload form state ── */
 interface UploadForm {
   type: string;
-  dateStart: string;
-  dateEnd: string;
+  dateRange: string;
   comment: string;
   usedForLogin: string;
 }
@@ -292,7 +291,7 @@ const DocumentManager = () => {
   });
 
   const [uploadForm, setUploadForm] = useState<UploadForm>({
-    type: "", dateStart: "", dateEnd: "", comment: "", usedForLogin: "yes",
+    type: "", dateRange: "", comment: "", usedForLogin: "yes",
   });
 
   /* Direct-update helper — same pattern as creditor tables */
@@ -329,7 +328,7 @@ const DocumentManager = () => {
 
   const handleUpload = () => {
     toast.success("Document uploaded");
-    setUploadForm({ type: "", dateStart: "", dateEnd: "", comment: "", usedForLogin: "yes" });
+    setUploadForm({ type: "", dateRange: "", comment: "", usedForLogin: "yes" });
     setUploadOpen(false);
   };
 
@@ -445,19 +444,14 @@ const DocumentManager = () => {
                   {/* ── Date Range ── */}
                   <TableCell className="py-3 px-3">
                     {isEditing ? (
-                      <div className="flex items-center gap-1.5">
-                        <MonthYearPicker
-                          value={doc.dateStart}
-                          onChange={(v) => updateDoc(doc.id, "dateStart", v)}
-                          placeholder="Start"
-                        />
-                        <span className="text-muted-foreground text-xs">–</span>
-                        <MonthYearPicker
-                          value={doc.dateEnd}
-                          onChange={(v) => updateDoc(doc.id, "dateEnd", v)}
-                          placeholder="End"
-                        />
-                      </div>
+                      <UnifiedDatePicker
+                        mode="month-range"
+                        value={doc.dateRange}
+                        onChange={(v) => updateDoc(doc.id, "dateRange", v)}
+                        placeholder="Select range"
+                        compact
+                        className="w-[180px]"
+                      />
                     ) : (
                       <span className="text-sm text-muted-foreground">{doc.dateRange || "—"}</span>
                     )}
@@ -514,7 +508,7 @@ const DocumentManager = () => {
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
               <Label className="crm-field-label">Document Type</Label>
-              <Select value={uploadForm.type} onValueChange={(v) => setUploadForm({ ...uploadForm, type: v, dateStart: "", dateEnd: "" })}>
+              <Select value={uploadForm.type} onValueChange={(v) => setUploadForm({ ...uploadForm, type: v, dateRange: "" })}>
                 <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select type" /></SelectTrigger>
                 <SelectContent>
                   {documentTypes.map((type) => (
@@ -532,19 +526,12 @@ const DocumentManager = () => {
                 {uploadForm.type.includes("Bank") ? "Statement Period" : "Date Range"}
                 {!uploadForm.type && " (if applicable)"}
               </Label>
-              <div className="flex items-center gap-2">
-                <MonthYearPicker
-                  value={uploadForm.dateStart}
-                  onChange={(v) => setUploadForm({ ...uploadForm, dateStart: v })}
-                  placeholder="Start month"
-                />
-                <span className="text-muted-foreground text-xs">–</span>
-                <MonthYearPicker
-                  value={uploadForm.dateEnd}
-                  onChange={(v) => setUploadForm({ ...uploadForm, dateEnd: v })}
-                  placeholder="End month"
-                />
-              </div>
+              <UnifiedDatePicker
+                mode="month-range"
+                value={uploadForm.dateRange}
+                onChange={(v) => setUploadForm({ ...uploadForm, dateRange: v })}
+                placeholder="Select range"
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="crm-field-label">Comment (optional)</Label>

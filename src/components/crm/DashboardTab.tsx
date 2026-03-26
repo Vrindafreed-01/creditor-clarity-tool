@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef, Dispatch, SetStateAction } from "react";
+import { useState, useMemo, useRef, useEffect, Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UnifiedDatePicker } from "@/components/ui/unified-date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,12 +43,12 @@ import {
   Sparkles,
   UserPlus,
   X,
-  ChevronDown,
   Copy,
   RefreshCw,
   Search,
   MoreVertical,
   Eye,
+  ChevronDown,
 } from "lucide-react";
 import type { Creditor } from "@/types/creditor";
 import { DEBT_TYPES } from "@/types/creditor";
@@ -81,9 +82,6 @@ const calcPMT = (principal: number, annualRate: number, months: number): number 
 /* ── FOIR colour helpers ── */
 const foirColor = (pct: number) =>
   pct <= 40 ? "text-green-600" : pct <= 55 ? "text-amber-600" : "text-red-600";
-const foirBg = (pct: number) =>
-  pct <= 40 ? "bg-green-50" : pct <= 55 ? "bg-amber-50" : "bg-red-50";
-
 /* ── Lender data ── */
 interface LenderOption {
   id: string;
@@ -110,6 +108,15 @@ const LENDER_SUGGESTIONS = [
   "Yes Bank", "Federal Bank", "RBL Bank", "Hero FinCorp",
   "Fullerton India", "Muthoot Finance", "Manappuram Finance",
   "L&T Finance", "Cholamandalam", "Shriram Finance", "IndiaBulls",
+];
+
+/* ── Creditor / Bank name suggestions ── */
+const CREDITOR_NAME_SUGGESTIONS = [
+  "HDFC Bank", "ICICI Bank", "SBI", "Axis Bank", "Kotak Mahindra",
+  "Bajaj Finserv", "TATA Capital", "IDFC First", "IndusInd Bank",
+  "Yes Bank", "RBL Bank", "Hero FinCorp", "Fullerton India",
+  "L&T Finance", "Cholamandalam", "Shriram Finance",
+  "Muthoot Finance", "Manappuram Finance", "Piramal Finance",
 ];
 
 /* ── Props ── */
@@ -155,8 +162,7 @@ const DashboardTab = ({
   const [isLenderEditing, setIsLenderEditing] = useState(false);
 
   /* ── Collapsible dropdown states (FREED panels) ── */
-  const [wfExcOpen,   setWfExcOpen]   = useState(false);
-  const [wofAllOpen,  setWofAllOpen]  = useState(true);
+  // (Summary section state removed — now inline in stats bar)
 
   /* ── Lender data ── */
   const [lenderData, setLenderData] = useState<LenderOption[]>(INITIAL_LENDERS);
@@ -202,27 +208,31 @@ const DashboardTab = ({
 
   /* ── Add Creditor dialog ── */
   const [addCreditorOpen, setAddCreditorOpen] = useState(false);
-  const [newCred, setNewCred] = useState({
+  const [credNameSearchOpen, setCredNameSearchOpen] = useState(false);
+  const emptyNewCred = {
     name: "", debtType: "PERSONAL_LOAN", closureAmount: "", emi: "",
+    sanctionedAmount: "", accountNumber: "", openDate: "", currentROI: "", tenure: "",
     addTo: "included" as "included" | "excluded",
-  });
+  };
+  const [newCred, setNewCred] = useState(emptyNewCred);
   const handleAddCreditor = () => {
     if (!newCred.name.trim()) return;
     const c: Creditor = {
       id: `manual-${Date.now()}`,
       name: newCred.name.trim(),
       debtType: newCred.debtType,
-      accountNumber: "—",
-      openDate: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
-      sanctionedAmount: parseFloat(newCred.closureAmount) || 0,
+      accountNumber: newCred.accountNumber || "—",
+      openDate: newCred.openDate || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
+      sanctionedAmount: parseFloat(newCred.sanctionedAmount) || parseFloat(newCred.closureAmount) || 0,
       currentBalance:   parseFloat(newCred.closureAmount) || 0,
       closureAmount:    parseFloat(newCred.closureAmount) || 0,
-      tenure: 0, currentROI: "--",
+      tenure: parseInt(newCred.tenure) || 0,
+      currentROI: newCred.currentROI || "--",
       emi: parseFloat(newCred.emi) || 0,
     };
     if (newCred.addTo === "included") setIncluded((p) => [...p, c]);
     else setExcluded((p) => [...p, c]);
-    setNewCred({ name: "", debtType: "PERSONAL_LOAN", closureAmount: "", emi: "", addTo: "included" });
+    setNewCred(emptyNewCred);
     setAddCreditorOpen(false);
   };
 
@@ -254,6 +264,8 @@ const DashboardTab = ({
   const [selectedLenderId, setSelectedLenderId] = useState<string | null>(null);
   const [topUpEnabled, setTopUpEnabled] = useState(false);
   const [autoSelected, setAutoSelected] = useState(false);
+  const [wofAllOpen, setWofAllOpen] = useState(false);
+  const [wfExcOpen, setWfExcOpen] = useState(false);
 
   const handleSelectLender = (id: string) => {
     const newId = id === selectedLenderId ? null : id;
@@ -275,11 +287,24 @@ const DashboardTab = ({
     [lenderData, inclClosureTotal, exclEMITotal, existingTotalEMI, netSalary]
   );
 
+  /* ── Best lender (highest reduction) ── */
+  const bestLenderId = useMemo(() => {
+    if (lenderRows.length === 0) return null;
+    return lenderRows.reduce((prev, curr) => curr.reduction > prev.reduction ? curr : prev).id;
+  }, [lenderRows]);
+
+  // Auto-preselect best lender on initial render
+  useEffect(() => {
+    if (bestLenderId && !selectedLenderId) {
+      setSelectedLenderId(bestLenderId);
+      setAutoSelected(true);
+    }
+  }, [bestLenderId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   /* ── Loan Details CTA ── */
   const handleLoanDetails = () => {
-    if (lenderRows.length === 0) return;
-    const best = lenderRows.reduce((prev, curr) => curr.reduction > prev.reduction ? curr : prev);
-    setSelectedLenderId(best.id);
+    if (!bestLenderId) return;
+    setSelectedLenderId(bestLenderId);
     setAutoSelected(true);
     setTimeout(() => lenderSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
@@ -288,7 +313,7 @@ const DashboardTab = ({
   const selectedLender   = lenderData.find((l) => l.id === selectedLenderId) ?? lenderData[0];
   const consolidationEMI = calcPMT(inclClosureTotal, selectedLender.roi, selectedLender.tenureMonths);
   const newObligation    = consolidationEMI + exclEMITotal;
-  const preFOIR          = netSalary > 0 ? (existingTotalEMI / netSalary) * 100 : 0;
+  // preFOIR = existingFOIR (used in the summary stats bar above)
   const postFOIR         = netSalary > 0 ? (newObligation / netSalary) * 100 : 0;
 
   const topUpLenderEMI     = calcPMT(inclClosureTotal + selectedLender.topUpAvailable, selectedLender.roi, selectedLender.tenureMonths);
@@ -488,15 +513,26 @@ const DashboardTab = ({
                         )}
                       </TableCell>
                       <TableCell className="px-3 py-2.5 whitespace-nowrap">
-                        <span className="text-xs font-mono font-semibold text-muted-foreground bg-muted/50 rounded px-1.5 py-0.5">
-                          {DEBT_ABBREV[c.debtType] ?? "AC"}
-                        </span>
+                        {isDebtEditing ? (
+                          <Select value={c.debtType} onValueChange={(v) => setIncluded(p => p.map(x => x.id === c.id ? { ...x, debtType: v } : x))}>
+                            <SelectTrigger className="h-7 text-xs border-primary/40 w-20"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {DEBT_TYPES.map((t) => (
+                                <SelectItem key={t} value={t} className="text-xs">{DEBT_ABBREV[t] ?? t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-xs font-mono font-semibold text-muted-foreground bg-muted/50 rounded px-1.5 py-0.5">
+                            {DEBT_ABBREV[c.debtType] ?? "AC"}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="px-3 py-2.5">
                         <span className="text-xs text-muted-foreground whitespace-nowrap">{c.openDate}</span>
                       </TableCell>
                       <TableCell className="px-3 py-2.5 text-xs font-medium text-right whitespace-nowrap">
-                        <span>{fmtV(c.sanctionedAmount)}</span>
+                        <EditableNum value={c.sanctionedAmount} isEditing={isDebtEditing} onChange={(v) => updateIncluded(c.id, "sanctionedAmount", v)} />
                       </TableCell>
                       <TableCell className="px-3 py-2.5 text-xs font-medium text-right whitespace-nowrap">
                         <EditableNum value={c.closureAmount} isEditing={isDebtEditing} onChange={(v) => updateIncluded(c.id, "closureAmount", v)} />
@@ -598,15 +634,26 @@ const DashboardTab = ({
                           className="data-[state=checked]:bg-red-500 scale-75" />
                       </TableCell>
                       <TableCell className="px-3 py-2.5 whitespace-nowrap">
-                        <span className="text-xs font-mono font-semibold text-muted-foreground bg-muted/50 rounded px-1.5 py-0.5">
-                          {DEBT_ABBREV[c.debtType] ?? "AC"}
-                        </span>
+                        {isDebtEditing ? (
+                          <Select value={c.debtType} onValueChange={(v) => setExcluded(p => p.map(x => x.id === c.id ? { ...x, debtType: v } : x))}>
+                            <SelectTrigger className="h-7 text-xs border-primary/40 w-20"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {DEBT_TYPES.map((t) => (
+                                <SelectItem key={t} value={t} className="text-xs">{DEBT_ABBREV[t] ?? t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-xs font-mono font-semibold text-muted-foreground bg-muted/50 rounded px-1.5 py-0.5">
+                            {DEBT_ABBREV[c.debtType] ?? "AC"}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="px-3 py-2.5">
                         <span className="text-xs text-muted-foreground whitespace-nowrap">{c.openDate}</span>
                       </TableCell>
                       <TableCell className="px-3 py-2.5 text-xs font-medium text-right whitespace-nowrap">
-                        <span>{fmtV(c.sanctionedAmount)}</span>
+                        <EditableNum value={c.sanctionedAmount} isEditing={isDebtEditing} onChange={(v) => updateExcluded(c.id, "sanctionedAmount", v)} />
                       </TableCell>
                       <TableCell className="px-3 py-2.5 text-xs font-medium text-right whitespace-nowrap">
                         <EditableNum value={c.closureAmount} isEditing={isDebtEditing} onChange={(v) => updateExcluded(c.id, "closureAmount", v)} />
@@ -667,55 +714,138 @@ const DashboardTab = ({
 
       </div>
 
-      {/* ═══════════════ SECTION 2B · LENDER CHECK ═══════════════ */}
-      <div className="bg-card rounded-lg border p-5">
-        <div className="flex flex-col items-center gap-4">
+      {/* ═══════════════ SECTION 2B · SUMMARY ═══════════════ */}
+      <div className="bg-card rounded-lg border p-5 space-y-4">
+        <div className="flex items-center justify-center">
           <Button onClick={handleLoanDetails} className="gap-2 px-10 h-10 text-sm">
             Lender Check <ArrowRight className="h-4 w-4" />
           </Button>
-          <div className="w-full grid grid-cols-7 divide-x border rounded-lg overflow-hidden bg-muted/10">
-            <div className="flex flex-col items-center gap-0.5 px-3 py-3">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Existing FOIR</span>
-              <span className={`text-sm font-bold ${foirColor(existingFOIR)}`}>
-                {netSalary > 0 ? `${existingFOIR.toFixed(2)}%` : "—"}
-              </span>
+        </div>
+
+        <h3 className="text-sm font-semibold text-foreground">Summary</h3>
+
+        <div className="grid grid-cols-2 gap-4">
+          {/* ── WITHOUT FREED column ── */}
+          <div className="border rounded-lg overflow-hidden">
+            <div className="bg-muted/30 px-4 py-2 border-b">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Without FREED</span>
             </div>
-            <div className="flex flex-col items-center gap-0.5 px-3 py-3">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Current EMI</span>
-              <span className="text-sm font-bold text-foreground">{fmtR(existingTotalEMI)}</span>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/10">
+                  <th className="text-left px-4 py-2 text-[11px] font-medium text-muted-foreground">Account</th>
+                  <th className="text-right px-4 py-2 text-[11px] font-medium text-muted-foreground">EMI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b">
+                  <td className={`px-4 py-2.5 text-sm font-semibold ${foirColor(existingFOIR)}`}>Pre-consolidation FOIR</td>
+                  <td className={`px-4 py-2.5 text-sm font-bold text-right ${foirColor(existingFOIR)}`}>
+                    {netSalary > 0 ? `${existingFOIR.toFixed(2)}%` : "—"}
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="px-4 py-2.5 text-sm font-semibold text-foreground">Total Monthly Obligation</td>
+                  <td className="px-4 py-2.5 text-sm font-bold text-right text-foreground">{fmtR(existingTotalEMI)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={2} className="px-4 pt-3 pb-1">
+                    <button
+                      onClick={() => setWofAllOpen(p => !p)}
+                      className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 hover:text-foreground transition-colors"
+                    >
+                      All Creditors ({included.length + excluded.length})
+                      <ChevronDown className={`h-3 w-3 transition-transform ${wofAllOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  </td>
+                </tr>
+                {wofAllOpen && [...included, ...excluded].map((c) => (
+                  <tr key={c.id} className="border-t">
+                    <td className="px-4 py-1.5 text-xs text-muted-foreground">{c.creditorName}</td>
+                    <td className="px-4 py-1.5 text-xs text-right font-medium">{fmtR(c.emi)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── WITH FREED column ── */}
+          <div className="border border-amber-200/60 rounded-lg overflow-hidden bg-amber-50/20">
+            <div className="bg-amber-100/40 px-4 py-2 border-b border-amber-200/60">
+              <span className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">With FREED</span>
             </div>
-            <div className="flex flex-col items-center gap-0.5 px-3 py-3">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">New FOIR</span>
-              <span className={`text-sm font-bold ${selectedLenderId ? foirColor(activePostFOIR) : "text-muted-foreground"}`}>
-                {selectedLenderId && netSalary > 0 ? `${activePostFOIR.toFixed(2)}%` : "—"}
-              </span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5 px-3 py-3">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">New EMI</span>
-              <span className="text-sm font-bold text-foreground">
-                {selectedLenderId ? fmtR(activeNewObligation) : "—"}
-              </span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5 px-3 py-3">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Reduction %</span>
-              {selectedLenderId && existingTotalEMI > 0 ? (() => {
-                const redPct = ((existingTotalEMI - activeNewObligation) / existingTotalEMI) * 100;
-                return <span className={`text-sm font-bold ${redPct >= 0 ? "text-green-600" : "text-red-600"}`}>{redPct.toFixed(1)}%</span>;
-              })() : <span className="text-sm font-bold text-muted-foreground">—</span>}
-            </div>
-            <div className="flex flex-col items-center gap-0.5 px-3 py-3">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Savings</span>
-              {selectedLenderId ? (() => {
-                const savings = existingTotalEMI - activeNewObligation;
-                return <span className={`text-sm font-bold ${savings >= 0 ? "text-green-600" : "text-red-600"}`}>{savings >= 0 ? "↓ " : "↑ "}{fmtR(Math.abs(savings))}</span>;
-              })() : <span className="text-sm font-bold text-muted-foreground">—</span>}
-            </div>
-            <div className="flex flex-col items-center gap-0.5 px-3 py-3">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">NDI</span>
-              <span className="text-sm font-bold text-foreground">
-                {selectedLenderId && netSalary > 0 ? fmtR(netSalary - activeNewObligation) : "—"}
-              </span>
-            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-amber-200/40 bg-amber-50/30">
+                  <th className="text-left px-4 py-2 text-[11px] font-medium text-muted-foreground">Account</th>
+                  <th className="text-right px-4 py-2 text-[11px] font-medium text-muted-foreground">EMI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-amber-200/40">
+                  <td className={`px-4 py-2.5 text-sm font-semibold ${selectedLenderId ? foirColor(activePostFOIR) : "text-muted-foreground"}`}>Post-consolidation FOIR</td>
+                  <td className={`px-4 py-2.5 text-sm font-bold text-right ${selectedLenderId ? foirColor(activePostFOIR) : "text-muted-foreground"}`}>
+                    {selectedLenderId && netSalary > 0 ? `${activePostFOIR.toFixed(2)}%` : "—"}
+                  </td>
+                </tr>
+                <tr className="border-b border-amber-200/40">
+                  <td className="px-4 py-2.5 text-sm font-semibold text-foreground">New Monthly Obligation</td>
+                  <td className="px-4 py-2.5 text-sm font-bold text-right text-foreground">
+                    {selectedLenderId ? fmtR(activeNewObligation) : "—"}
+                    {selectedLenderId && topUpEnabled && (
+                      <span className="block text-[9px] text-blue-600 font-medium">Top up: {fmtR(selectedLender.topUpAvailable)}</span>
+                    )}
+                  </td>
+                </tr>
+                <tr className="border-b border-amber-200/40">
+                  <td className="px-4 py-2.5 text-sm font-semibold text-foreground">Consolidation Loan</td>
+                  <td className="px-4 py-2.5 text-sm font-bold text-right text-foreground">
+                    {selectedLenderId ? fmtR(consolidationEMI) : "—"}
+                  </td>
+                </tr>
+                <tr className="border-b border-amber-200/40">
+                  <td className="px-4 py-2.5 text-sm font-semibold text-foreground">Reduction</td>
+                  <td className="px-4 py-2.5 text-sm font-bold text-right">
+                    {selectedLenderId && existingTotalEMI > 0 ? (() => {
+                      const redPct = ((existingTotalEMI - activeNewObligation) / existingTotalEMI) * 100;
+                      return <span className={redPct >= 0 ? "text-green-600" : "text-red-600"}>{redPct.toFixed(1)}%</span>;
+                    })() : <span className="text-muted-foreground">—</span>}
+                  </td>
+                </tr>
+                <tr className="border-b border-amber-200/40">
+                  <td className="px-4 py-2.5 text-sm font-semibold text-foreground">Savings</td>
+                  <td className="px-4 py-2.5 text-sm font-bold text-right">
+                    {selectedLenderId ? (() => {
+                      const savings = existingTotalEMI - activeNewObligation;
+                      return <span className={savings >= 0 ? "text-green-600" : "text-red-600"}>{savings >= 0 ? "↓ " : "↑ "}{fmtR(Math.abs(savings))}</span>;
+                    })() : <span className="text-muted-foreground">—</span>}
+                  </td>
+                </tr>
+                <tr className="border-b border-amber-200/40">
+                  <td className="px-4 py-2.5 text-sm font-semibold text-foreground">NDI</td>
+                  <td className="px-4 py-2.5 text-sm font-bold text-right text-foreground">
+                    {selectedLenderId && netSalary > 0 ? fmtR(netSalary - activeNewObligation) : "—"}
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={2} className="px-4 pt-3 pb-1">
+                    <button
+                      onClick={() => setWfExcOpen(p => !p)}
+                      className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 hover:text-foreground transition-colors"
+                    >
+                      Excluded Creditors ({excluded.length})
+                      <ChevronDown className={`h-3 w-3 transition-transform ${wfExcOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  </td>
+                </tr>
+                {wfExcOpen && excluded.map((c) => (
+                  <tr key={c.id} className="border-t border-amber-200/40">
+                    <td className="px-4 py-1.5 text-xs text-muted-foreground">{c.creditorName}</td>
+                    <td className="px-4 py-1.5 text-xs text-right font-medium">{fmtR(c.emi)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -797,7 +927,7 @@ const DashboardTab = ({
                               User Preferred
                             </span>
                           )}
-                          {isAutoSel && (
+                          {l.id === bestLenderId && (
                             <span className="text-[9px] font-bold text-green-700 bg-green-100 border border-green-300 rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
                               <Sparkles className="h-2.5 w-2.5" /> Best
                             </span>
@@ -836,12 +966,12 @@ const DashboardTab = ({
                           onClick={(e) => e.stopPropagation()} />
                       ) : (
                         <div className="flex flex-col items-end gap-0.5">
-                          <span>{fmtR(l.computedEMI)}</span>
-                          {l.overrideEMI && l.overrideEMI > 0 && (
+                          <span>{fmtR(topUpActive ? l.topUpEMI : l.computedEMI)}</span>
+                          {l.overrideEMI && l.overrideEMI > 0 && !topUpActive && (
                             <span className="text-[10px] text-amber-600 font-medium">overridden</span>
                           )}
                           {topUpActive && (
-                            <span className="text-[10px] text-blue-600 font-medium">included: {fmtR(l.topUpEMI)}</span>
+                            <span className="text-[10px] text-blue-600 font-medium">Top up: {fmtR(l.topUpAvailable)}</span>
                           )}
                         </div>
                       )}
@@ -896,17 +1026,26 @@ const DashboardTab = ({
                   <TableCell className="py-2.5">
                     <div className="relative">
                       <Input autoFocus value={newLenderDraft.name}
-                        onChange={(e) => { setNewLenderDraft(p => ({ ...p, name: e.target.value })); setLenderSearchOpen(e.target.value.length > 0); }}
-                        className="h-7 text-xs w-48 border-primary/40" placeholder="Lender name" />
-                      {lenderSearchOpen && LENDER_SUGGESTIONS.filter(s => s.toLowerCase().includes(newLenderDraft.name.toLowerCase()) && newLenderDraft.name.length > 0).length > 0 && (
-                        <div className="absolute z-50 bg-card border rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto w-48">
-                          {LENDER_SUGGESTIONS.filter(s => s.toLowerCase().includes(newLenderDraft.name.toLowerCase()) && newLenderDraft.name.length > 0).map(s => (
+                        onChange={(e) => { setNewLenderDraft(p => ({ ...p, name: e.target.value })); setLenderSearchOpen(true); }}
+                        onFocus={() => setLenderSearchOpen(true)}
+                        className="h-7 text-xs w-48 border-primary/40" placeholder="Search or type lender" />
+                      {lenderSearchOpen && (
+                        <div className="absolute z-50 bg-card border rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto w-48">
+                          <button type="button"
+                            className="w-full text-left px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors border-b"
+                            onClick={() => { setNewLenderDraft(p => ({ ...p, name: "" })); setLenderSearchOpen(false); }}>
+                            + Other (Add New)
+                          </button>
+                          {LENDER_SUGGESTIONS.filter(s => s.toLowerCase().includes(newLenderDraft.name.toLowerCase())).slice(0, 8).map(s => (
                             <button key={s} type="button"
                               className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors"
                               onClick={() => { setNewLenderDraft(p => ({ ...p, name: s })); setLenderSearchOpen(false); }}>
                               {s}
                             </button>
                           ))}
+                          {LENDER_SUGGESTIONS.filter(s => s.toLowerCase().includes(newLenderDraft.name.toLowerCase())).length === 0 && (
+                            <p className="px-3 py-2 text-xs text-muted-foreground">No matches — type to add custom</p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -955,184 +1094,10 @@ const DashboardTab = ({
 
       </div>
 
-      {/* ═══════════════ SECTION 4 · SUMMARY ═══════════════ */}
-      <div className="bg-card rounded-lg border p-5 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Summary</h3>
-        <div className="grid grid-cols-2 gap-4">
+      {/* ═══════════════ SECTION 4 · DOCUMENT MANAGER ═══════════════ */}
+      <DocumentManager />
 
-          {/* ═══ WITHOUT FREED ═══ */}
-          <div className="border rounded-lg overflow-hidden">
-            <div className="px-4 py-2.5 border-b bg-muted/30">
-              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Without FREED</p>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="px-4 py-2 text-xs font-semibold bg-muted/20">Account</TableHead>
-                  <TableHead className="px-4 py-2 text-xs font-semibold bg-muted/20 text-right">EMI</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-
-                {/* Pre-consolidation FOIR — TOP */}
-                <TableRow className={`hover:bg-transparent ${foirBg(preFOIR)}`}>
-                  <TableCell className="px-4 py-2.5 text-sm font-bold text-foreground">Pre-consolidation FOIR</TableCell>
-                  <TableCell className={`px-4 py-2.5 text-sm font-bold text-right ${foirColor(preFOIR)}`}>
-                    {netSalary > 0 ? `${preFOIR.toFixed(2)}%` : "—"}
-                  </TableCell>
-                </TableRow>
-
-                {/* Divider */}
-                <TableRow className="pointer-events-none">
-                  <TableCell colSpan={2} className="p-0"><div className="h-px bg-border mx-4" /></TableCell>
-                </TableRow>
-
-                {/* Total Monthly Obligation */}
-                <TableRow className="bg-muted/10 hover:bg-muted/10">
-                  <TableCell className="px-4 py-2.5 text-sm font-semibold text-foreground">Total Monthly Obligation</TableCell>
-                  <TableCell className="px-4 py-2.5 text-sm font-semibold text-right">{fmtR(existingTotalEMI)}</TableCell>
-                </TableRow>
-
-                {/* Divider */}
-                <TableRow className="pointer-events-none">
-                  <TableCell colSpan={2} className="p-0"><div className="h-px bg-border mx-4" /></TableCell>
-                </TableRow>
-
-                {/* Collapsible: All Creditors — BOTTOM */}
-                <TableRow
-                  className="hover:bg-muted/10 cursor-pointer select-none"
-                  onClick={() => setWofAllOpen((o) => !o)}
-                >
-                  <TableCell colSpan={2} className="px-4 py-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        All Creditors ({included.length + excluded.length})
-                      </span>
-                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${wofAllOpen ? "" : "-rotate-90"}`} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-                {wofAllOpen && [...included, ...excluded].map((c) => (
-                  <TableRow key={c.id} className="hover:bg-muted/10">
-                    <TableCell className="px-4 pl-7 py-2 text-sm text-foreground">{c.name}</TableCell>
-                    <TableCell className="px-4 py-2 text-sm text-right font-medium">
-                      {c.emi > 0 ? fmtR(c.emi) : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {[...included, ...excluded].length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={2} className="px-4 py-4 text-xs text-center text-muted-foreground">No creditors added</TableCell>
-                  </TableRow>
-                )}
-
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* ═══ WITH FREED ═══ */}
-          <div className="border rounded-lg overflow-hidden border-primary/30">
-            <div className="px-4 py-2.5 border-b bg-primary/5">
-              <p className="text-xs font-bold uppercase tracking-wide text-primary">With FREED</p>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="px-4 py-2 text-xs font-semibold bg-primary/5">Account</TableHead>
-                  <TableHead className="px-4 py-2 text-xs font-semibold bg-primary/5 text-right">EMI</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-
-                {/* Post-consolidation FOIR — TOP */}
-                <TableRow className={`hover:bg-transparent ${foirBg(activePostFOIR)}`}>
-                  <TableCell className="px-4 py-2.5 text-sm font-bold text-foreground">Post-consolidation FOIR</TableCell>
-                  <TableCell className={`px-4 py-2.5 text-sm font-bold text-right ${foirColor(activePostFOIR)}`}>
-                    {netSalary > 0 ? `${activePostFOIR.toFixed(2)}%` : "—"}
-                  </TableCell>
-                </TableRow>
-
-                {/* New Monthly Obligation */}
-                <TableRow className="bg-muted/10 hover:bg-muted/10">
-                  <TableCell className="px-4 py-2.5 text-sm font-semibold text-foreground">
-                    New Monthly Obligation
-                    {topUpEnabled && <span className="ml-1 text-[10px] text-blue-600">incl. top-up</span>}
-                  </TableCell>
-                  <TableCell className="px-4 py-2.5 text-sm font-semibold text-right">
-                    {fmtR(activeNewObligation)}
-                  </TableCell>
-                </TableRow>
-
-                {/* Top-up FOIR comparison row */}
-                {topUpEnabled && (
-                  <TableRow className="bg-blue-50/40 hover:bg-blue-50/40">
-                    <TableCell className="px-4 pl-7 py-2 text-xs font-medium text-blue-700">Without top-up FOIR</TableCell>
-                    <TableCell className={`px-4 py-2 text-xs font-semibold text-right ${foirColor(postFOIR)}`}>
-                      {netSalary > 0 ? `${postFOIR.toFixed(2)}%` : "—"}
-                    </TableCell>
-                  </TableRow>
-                )}
-
-                {/* Divider */}
-                <TableRow className="pointer-events-none">
-                  <TableCell colSpan={2} className="p-0"><div className="h-px bg-border mx-4" /></TableCell>
-                </TableRow>
-
-                {/* Consolidated Creditors EMI */}
-                <TableRow className="hover:bg-muted/10">
-                  <TableCell className="px-4 py-2.5 text-sm font-semibold text-foreground">
-                    Consolidation Loan
-                    {topUpEnabled && (
-                      <span className="ml-1.5 text-[10px] text-blue-600">(incl. top-up)</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-4 py-2.5 text-sm font-semibold text-right">
-                    <span className="text-sm font-semibold">{fmtR(topUpEnabled ? topUpLenderEMI : consolidationEMI)}</span>
-                  </TableCell>
-                </TableRow>
-
-                {/* Divider */}
-                <TableRow className="pointer-events-none">
-                  <TableCell colSpan={2} className="p-0"><div className="h-px bg-border mx-4" /></TableCell>
-                </TableRow>
-
-                {/* Collapsible: Excluded Creditors — show EMI */}
-                <TableRow
-                  className="hover:bg-muted/10 cursor-pointer select-none"
-                  onClick={() => setWfExcOpen((o) => !o)}
-                >
-                  <TableCell colSpan={2} className="px-4 py-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        Excluded Creditors ({excluded.length})
-                      </span>
-                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${wfExcOpen ? "" : "-rotate-90"}`} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-                {wfExcOpen && excluded.map((c) => (
-                  <TableRow key={c.id} className="hover:bg-muted/10">
-                    <TableCell className="px-4 pl-7 py-2 text-sm text-foreground">{c.name}</TableCell>
-                    <TableCell className="px-4 py-2 text-sm text-right font-medium">
-                      {c.emi > 0 ? fmtR(c.emi) : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-
-                {included.length === 0 && excluded.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={2} className="px-4 py-4 text-xs text-center text-muted-foreground">No creditors added</TableCell>
-                  </TableRow>
-                )}
-
-              </TableBody>
-            </Table>
-          </div>
-
-        </div>
-      </div>
-
-      {/* ═══════════════ SECTION 5 · GENERATE AGREEMENT ═══════════════ */}
+      {/* ═══════════════ SECTION 6 · DCP AGREEMENT LIST ═══════════════ */}
       <div className="bg-card rounded-lg border p-5 space-y-4">
         {showDocForm && (
           <div className="space-y-4">
@@ -1170,15 +1135,15 @@ const DashboardTab = ({
               </div>
               <div className="space-y-1.5">
                 <Label className="crm-field-label">Loan Approved On</Label>
-                <Input type="date" value={docForm.loanApprovedOn}
-                  onChange={(e) => setDocForm({ ...docForm, loanApprovedOn: e.target.value })}
-                  className={inputCls} />
+                <UnifiedDatePicker value={docForm.loanApprovedOn}
+                  onChange={(v) => setDocForm({ ...docForm, loanApprovedOn: v })}
+                  placeholder="Select date" />
               </div>
               <div className="space-y-1.5">
                 <Label className="crm-field-label">EMI Start Date</Label>
-                <Input type="date" value={docForm.emiStartDate}
-                  onChange={(e) => setDocForm({ ...docForm, emiStartDate: e.target.value })}
-                  className={inputCls} />
+                <UnifiedDatePicker value={docForm.emiStartDate}
+                  onChange={(v) => setDocForm({ ...docForm, emiStartDate: v })}
+                  placeholder="Select date" />
               </div>
               <div className="space-y-1.5">
                 <Label className="crm-field-label">Loan Approved Amount</Label>
@@ -1295,12 +1260,9 @@ const DashboardTab = ({
         </div>
       </div>
 
-      {/* ═══════════════ SECTION 6 · DOCUMENT MANAGER ═══════════════ */}
-      <DocumentManager />
-
       {/* ═══════════════ ADD CREDITOR DIALOG ═══════════════ */}
       <Dialog open={addCreditorOpen} onOpenChange={setAddCreditorOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-primary" />
@@ -1309,29 +1271,79 @@ const DashboardTab = ({
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">
-                Creditor / Bank Name <span className="text-red-500">*</span>
-              </Label>
-              <Input placeholder="e.g. HDFC Bank, Bajaj Finance"
-                value={newCred.name}
-                onChange={(e) => setNewCred({ ...newCred, name: e.target.value })}
-                className="h-9 text-sm" autoFocus />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Debt Type</Label>
-              <Select value={newCred.debtType} onValueChange={(v) => setNewCred({ ...newCred, debtType: v })}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {DEBT_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Creditor / Bank Name <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input placeholder="Search or type bank name"
+                    value={newCred.name}
+                    onChange={(e) => { setNewCred({ ...newCred, name: e.target.value }); setCredNameSearchOpen(true); }}
+                    onFocus={() => setCredNameSearchOpen(true)}
+                    className="h-9 text-sm" autoFocus />
+                  {credNameSearchOpen && (
+                    <div className="absolute z-50 bg-card border rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto w-full">
+                      <button type="button"
+                        className="w-full text-left px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors border-b"
+                        onClick={() => { setNewCred({ ...newCred, name: "" }); setCredNameSearchOpen(false); }}>
+                        + Other (Add New)
+                      </button>
+                      {CREDITOR_NAME_SUGGESTIONS
+                        .filter((s) => s.toLowerCase().includes(newCred.name.toLowerCase()))
+                        .slice(0, 8)
+                        .map((s) => (
+                          <button key={s} type="button"
+                            className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors"
+                            onClick={() => { setNewCred({ ...newCred, name: s }); setCredNameSearchOpen(false); }}>
+                            {s}
+                          </button>
+                        ))}
+                      {CREDITOR_NAME_SUGGESTIONS.filter((s) => s.toLowerCase().includes(newCred.name.toLowerCase())).length === 0 && (
+                        <p className="px-3 py-2 text-xs text-muted-foreground">No matches — type to add custom</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Debt Type</Label>
+                <Select value={newCred.debtType} onValueChange={(v) => setNewCred({ ...newCred, debtType: v })}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DEBT_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Account Number</Label>
+                <Input placeholder="e.g. XXXX1234"
+                  value={newCred.accountNumber}
+                  onChange={(e) => setNewCred({ ...newCred, accountNumber: e.target.value })}
+                  className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Open Date</Label>
+                <UnifiedDatePicker
+                  value={newCred.openDate}
+                  onChange={(v) => setNewCred({ ...newCred, openDate: v })}
+                  placeholder="Select date" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Sanctioned Amount (₹)</Label>
+                <Input type="number" placeholder="e.g. 300000"
+                  value={newCred.sanctionedAmount}
+                  onChange={(e) => setNewCred({ ...newCred, sanctionedAmount: e.target.value })}
+                  className="h-9 text-sm" />
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Outstanding Amount (₹)</Label>
                 <Input type="number" placeholder="e.g. 250000"
@@ -1339,11 +1351,28 @@ const DashboardTab = ({
                   onChange={(e) => setNewCred({ ...newCred, closureAmount: e.target.value })}
                   className="h-9 text-sm" />
               </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Monthly EMI (₹)</Label>
                 <Input type="number" placeholder="e.g. 8000"
                   value={newCred.emi}
                   onChange={(e) => setNewCred({ ...newCred, emi: e.target.value })}
+                  className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">ROI (%)</Label>
+                <Input placeholder="e.g. 16%"
+                  value={newCred.currentROI}
+                  onChange={(e) => setNewCred({ ...newCred, currentROI: e.target.value })}
+                  className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Tenure (months)</Label>
+                <Input type="number" placeholder="e.g. 36"
+                  value={newCred.tenure}
+                  onChange={(e) => setNewCred({ ...newCred, tenure: e.target.value })}
                   className="h-9 text-sm" />
               </div>
             </div>
@@ -1383,7 +1412,7 @@ const DashboardTab = ({
 
           <DialogFooter className="gap-2">
             <Button variant="outline" size="sm" className="gap-1.5"
-              onClick={() => { setAddCreditorOpen(false); setNewCred({ name: "", debtType: "PERSONAL_LOAN", closureAmount: "", emi: "", addTo: "included" }); }}>
+              onClick={() => { setAddCreditorOpen(false); setNewCred(emptyNewCred); }}>
               <X className="h-3.5 w-3.5" /> Cancel
             </Button>
             <Button size="sm" className="gap-1.5" onClick={handleAddCreditor} disabled={!newCred.name.trim()}>
