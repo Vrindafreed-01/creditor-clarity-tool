@@ -761,7 +761,7 @@ const DashboardTab = ({
                 </tr>
                 {wofAllOpen && [...included, ...excluded].map((c) => (
                   <tr key={c.id} className="border-t">
-                    <td className="px-4 py-1.5 text-xs text-muted-foreground">{c.creditorName}</td>
+                    <td className="px-4 py-1.5 text-xs text-muted-foreground">{c.name}</td>
                     <td className="px-4 py-1.5 text-xs text-right font-medium">{fmtR(c.emi)}</td>
                   </tr>
                 ))}
